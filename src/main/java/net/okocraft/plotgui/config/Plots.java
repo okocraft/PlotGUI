@@ -261,13 +261,13 @@ public final class Plots extends CustomConfig {
         sign.update();
     }
 
-    public void regen(String claim, CommandSender executor) {
+    public boolean regen(String claim, CommandSender executor) {
         long startTime = System.currentTimeMillis();
         long cooldown = regenCooldown.getOrDefault(claim, 0L) + 1000 * 60 * 60 - startTime;
         if (cooldown > 0) {
             Messages.getInstance().sendMessage(executor, "gui.regen-cooldown",
                     Map.of("%cooldown%", String.valueOf(cooldown / 1000)));
-            return;
+            return false;
         }
         regenCooldown.put(claim, startTime);
 
@@ -277,6 +277,7 @@ public final class Plots extends CustomConfig {
                 add(claim);
             }
         }, executor);
+        return true;
     }
 
     public void regenMultiRegions(Set<String> claims, CommandSender executor) {
