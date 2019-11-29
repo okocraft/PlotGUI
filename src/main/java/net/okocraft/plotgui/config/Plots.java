@@ -48,7 +48,8 @@ public final class Plots extends CustomConfig {
     }
 
     public void addClaim(String claim, World world, Location sign, BlockFace signDirection, OfflinePlayer owner) {
-        ProtectedRegion region = WorldGuard.getInstance().getPlatform().getRegionContainer().get(BukkitAdapter.adapt(world)).getRegion(claim);
+        ProtectedRegion region = WorldGuard.getInstance().getPlatform().getRegionContainer()
+                .get(BukkitAdapter.adapt(world)).getRegion(claim);
         if (region == null) {
             return;
         }
@@ -133,9 +134,9 @@ public final class Plots extends CustomConfig {
         save();
         placeSign(claim);
     }
-    
+
     public void removeOwner(String claim, OfflinePlayer owner) {
-        addMember(claim, owner);
+            addMember(claim, owner);
         get().set(claim + ".owner", null);
         save();
         placeSign(claim);
@@ -147,9 +148,7 @@ public final class Plots extends CustomConfig {
             return Set.of();
         }
 
-        return region.getMembers().getUniqueIds().stream()
-                .map(Bukkit::getOfflinePlayer)
-                .filter(Objects::nonNull)
+        return region.getMembers().getUniqueIds().stream().map(Bukkit::getOfflinePlayer).filter(Objects::nonNull)
                 .collect(Collectors.toSet());
     }
 
@@ -162,10 +161,10 @@ public final class Plots extends CustomConfig {
         LocalPlayer localPlayer;
         try {
             localPlayer = WorldGuardPlugin.inst().wrapOfflinePlayer(player);
-        if (region.getMembers().contains(localPlayer)) {
-            return false;
-        }
-        region.getMembers().addPlayer(localPlayer);
+            if (region.getMembers().contains(localPlayer)) {
+                return false;
+            }
+            region.getMembers().addPlayer(localPlayer);
         } catch (NullPointerException e) {
             if (region.getMembers().contains(player.getUniqueId())) {
                 return false;
@@ -196,14 +195,13 @@ public final class Plots extends CustomConfig {
             return null;
         }
 
-        return WorldGuard.getInstance().getPlatform().getRegionContainer().get(BukkitAdapter.adapt(signLocation.getWorld())).getRegion(claim);
+        return WorldGuard.getInstance().getPlatform().getRegionContainer()
+                .get(BukkitAdapter.adapt(signLocation.getWorld())).getRegion(claim);
     }
-    
+
     public Set<String> getClaims() {
-        return get().getKeys(false).stream()
-                .filter(claim -> getSignLocation(claim) != null)
-                .filter(claim -> getSignFacing(claim) != null)
-                .collect(Collectors.toSet());
+        return get().getKeys(false).stream().filter(claim -> getSignLocation(claim) != null)
+                .filter(claim -> getSignFacing(claim) != null).collect(Collectors.toSet());
     }
 
     public boolean hasClaim(OfflinePlayer player) {
@@ -218,11 +216,9 @@ public final class Plots extends CustomConfig {
     public String getClaimBySignLocation(Location signLocation) {
         for (String claim : getClaims()) {
             Location currentLocation = getSignLocation(claim);
-            if (
-                currentLocation.getBlockX() == signLocation.getBlockX() &&
-                currentLocation.getBlockY() == signLocation.getBlockY() &&
-                currentLocation.getBlockZ() == signLocation.getBlockZ()
-            ) {
+            if (currentLocation.getBlockX() == signLocation.getBlockX()
+                    && currentLocation.getBlockY() == signLocation.getBlockY()
+                    && currentLocation.getBlockZ() == signLocation.getBlockZ()) {
                 return claim;
             }
         }
@@ -256,8 +252,7 @@ public final class Plots extends CustomConfig {
         sign.setLine(0, "[PlotGUI]");
         sign.setLine(1, claim);
         OfflinePlayer owner = getOwner(claim);
-        String line2 = owner == null
-                ? Messages.getInstance().getMessage("other.click-here-to-claim")
+        String line2 = owner == null ? Messages.getInstance().getMessage("other.click-here-to-claim")
                 : Optional.ofNullable(owner.getName()).orElse(owner.getUniqueId().toString());
         sign.setLine(2, line2);
         sign.update();
@@ -267,13 +262,14 @@ public final class Plots extends CustomConfig {
         long startTime = System.currentTimeMillis();
         long cooldown = regenCooldown.getOrDefault(claim, 0L) + 1000 * 60 * 60 - startTime;
         if (cooldown > 0) {
-            Messages.getInstance().sendMessage(executor, "gui.regen-cooldown", Map.of("%cooldown%", String.valueOf(cooldown / 1000)));
+            Messages.getInstance().sendMessage(executor, "gui.regen-cooldown",
+                    Map.of("%cooldown%", String.valueOf(cooldown / 1000)));
             return;
         }
         regenCooldown.put(claim, startTime);
 
         regenMultiRegions(new HashSet<String>() {
-			private static final long serialVersionUID = 1L;
+            private static final long serialVersionUID = 1L;
             {
                 add(claim);
             }
@@ -294,12 +290,13 @@ public final class Plots extends CustomConfig {
             return;
         }
 
-        ProtectedRegion region = WorldGuard.getInstance().getPlatform().getRegionContainer().get(BukkitAdapter.adapt(signLocation.getWorld())).getRegion(claim);
+        ProtectedRegion region = WorldGuard.getInstance().getPlatform().getRegionContainer()
+                .get(BukkitAdapter.adapt(signLocation.getWorld())).getRegion(claim);
         if (region == null) {
             return;
         }
-        
-        new BukkitRunnable(){
+
+        new BukkitRunnable() {
             final long startTime = System.currentTimeMillis();
             final int floorHeight = signLocation.getBlockY() - 1;
             int x = region.getMinimumPoint().getBlockX();
@@ -340,8 +337,10 @@ public final class Plots extends CustomConfig {
                 Plots.getInstance().placeSign(claim);
 
                 cancel();
-                PLUGIN.getLogger().info("Plot regen operation on " + claim + " finished in " + (System.currentTimeMillis() - startTime) + " ms.");
-                Messages.getInstance().sendMessage(executor, "gui.regen-finish", Map.of("%time%", String.valueOf((System.currentTimeMillis() - startTime) / 1000)));
+                PLUGIN.getLogger().info("Plot regen operation on " + claim + " finished in "
+                        + (System.currentTimeMillis() - startTime) + " ms.");
+                Messages.getInstance().sendMessage(executor, "gui.regen-finish",
+                        Map.of("%time%", String.valueOf((System.currentTimeMillis() - startTime) / 1000)));
                 regenMultiRegions(claims, executor);
             }
         }.runTaskTimer(PLUGIN, 0L, Config.getInstance().getRegenTickUnit());
@@ -354,13 +353,13 @@ public final class Plots extends CustomConfig {
 
         } else if (location.getBlockY() > floor) {
             block.setType(Material.AIR);
-        
+
         } else if (location.getBlockY() == floor) {
             block.setType(Material.GRASS_BLOCK);
-            
+
         } else if (location.getBlockY() >= floor - 5) {
             block.setType(Material.DIRT);
-        
+
         } else {
             block.setType(Material.STONE);
         }
