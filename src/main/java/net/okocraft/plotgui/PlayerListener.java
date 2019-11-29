@@ -155,6 +155,7 @@ public class PlayerListener implements Listener {
     private Conversation createYesNoConversation(String messageKey, Player player) {
         return new ConversationFactory(PLUGIN).withPrefix(
                 arg -> ChatColor.translateAlternateColorCodes('&', Messages.getInstance().getMessage("plugin.prefix") + " "))
+                .withLocalEcho(false)
                 .withFirstPrompt(new ValidatingPrompt() {
 
                     @Override
