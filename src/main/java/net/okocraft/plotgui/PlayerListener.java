@@ -128,9 +128,11 @@ public class PlayerListener implements Listener {
             break;
         case 6:
             startRegenConversation(false, player, region);
+            player.closeInventory();
             break;
         case 8:
             startRegenConversation(true, player, region);
+            player.closeInventory();
             break;
         }
     }
