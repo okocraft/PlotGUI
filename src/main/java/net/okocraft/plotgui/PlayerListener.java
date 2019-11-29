@@ -222,14 +222,9 @@ public class PlayerListener implements Listener {
                 PersistentDataType.STRING);
         OfflinePlayer selectedPlayer;
         try {
-            selectedPlayer = Bukkit.getPlayer(UUID.fromString(uuid));
+            selectedPlayer = Bukkit.getOfflinePlayer(UUID.fromString(uuid));
         } catch (IllegalArgumentException e) {
             PLUGIN.getLogger().log(Level.WARNING, "Invalid uuid string is stored in skull item.", e);
-            return;
-        }
-
-        if (selectedPlayer == null) {
-            Messages.getInstance().sendNoPlayerFound(player, uuid);
             return;
         }
 
@@ -239,12 +234,10 @@ public class PlayerListener implements Listener {
         // 4: change-owner
         switch (gui.getPreviousGUIClickedSlot()) {
         case 0:
-            region.getMembers().addPlayer(WorldGuardPlugin.inst().wrapOfflinePlayer(selectedPlayer));
             Plots.getInstance().addMember(region.getId(), selectedPlayer);
             gui.getInventory().setItem(event.getSlot(), new ItemStack(Material.AIR));
             break;
         case 2:
-            region.getMembers().removePlayer(WorldGuardPlugin.inst().wrapOfflinePlayer(selectedPlayer));
             Plots.getInstance().removeMember(region.getId(), selectedPlayer);
             gui.getInventory().setItem(event.getSlot(), new ItemStack(Material.AIR));
             break;

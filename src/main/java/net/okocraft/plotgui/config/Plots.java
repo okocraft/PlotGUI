@@ -159,12 +159,20 @@ public final class Plots extends CustomConfig {
             return false;
         }
 
-        LocalPlayer localPlayer = WorldGuardPlugin.inst().wrapOfflinePlayer(player);
+        LocalPlayer localPlayer;
+        try {
+            localPlayer = WorldGuardPlugin.inst().wrapOfflinePlayer(player);
         if (region.getMembers().contains(localPlayer)) {
             return false;
         }
-        
         region.getMembers().addPlayer(localPlayer);
+        } catch (NullPointerException e) {
+            if (region.getMembers().contains(player.getUniqueId())) {
+                return false;
+            }
+            region.getMembers().addPlayer(player.getUniqueId());
+        }
+
         return true;
     }
 
@@ -174,12 +182,7 @@ public final class Plots extends CustomConfig {
             return false;
         }
 
-        LocalPlayer localPlayer = WorldGuardPlugin.inst().wrapOfflinePlayer(player);
-        if (!region.getMembers().contains(localPlayer)) {
-            return false;
-        }
-
-        region.getMembers().removePlayer(localPlayer);
+        region.getMembers().removePlayer(player.getUniqueId());
         return true;
     }
 
