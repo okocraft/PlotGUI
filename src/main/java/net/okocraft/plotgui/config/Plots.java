@@ -372,7 +372,11 @@ public final class Plots extends CustomConfig {
     public Set<String> getInactiveClaims(int threshold) {
         Set<String> result = new HashSet<>();
         getClaims().forEach(claim -> {
-            long lastPlayed = getOwner(claim).getLastPlayed();
+            OfflinePlayer owner = getOwner(claim);
+            if (owner == null || !owner.hasPlayedBefore()) {
+                return;
+            }
+            long lastPlayed = owner.getLastPlayed();
             int noLoginTerm = (int) (System.currentTimeMillis() - lastPlayed) / (1000 * 60 * 60 * 24);
             if (noLoginTerm > threshold) {
                 result.add(claim);

@@ -6,9 +6,7 @@ import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import net.okocraft.plotgui.config.Config;
-//import net.okocraft.plotgui.config.Plots;
-
-// TODO: GUI開くときの音？
+import net.okocraft.plotgui.config.Plots;
 
 public class PlotGUI extends JavaPlugin {
 
@@ -19,9 +17,9 @@ public class PlotGUI extends JavaPlugin {
         Config.getInstance().reloadAllConfigs();
         PlayerListener.getInstance().start();
 
-        //Plots.getInstance().regenMultiRegions(
-        //        Plots.getInstance().getInactiveClaims(Config.getInstance().getPlotPurgeDays()),
-        //        Bukkit.getConsoleSender());
+        Plots.getInstance().regenMultiRegions(
+                Plots.getInstance().getInactiveClaims(Config.getInstance().getPlotPurgeDays()),
+                Bukkit.getConsoleSender());
     }
 
     @Override
