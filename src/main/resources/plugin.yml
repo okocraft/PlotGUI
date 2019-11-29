@@ -3,6 +3,7 @@ version: ${project.version}
 main: net.okocraft.plotgui.PlotGUI
 api-version: 1.14
 author: LazyGon
+depend: ["WorldGuard"]
 
 # commands:
 #   command:
