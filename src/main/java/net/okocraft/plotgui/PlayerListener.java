@@ -144,6 +144,7 @@ public class PlayerListener implements Listener {
                 Plots.getInstance().regen(region.getId(), player);
                 if (abandon) {
                     Plots.getInstance().removeOwner(region.getId());
+                    region.getMembers().clear();
                 }
             }
         });
