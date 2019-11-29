@@ -27,6 +27,7 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
 import org.bukkit.block.data.Directional;
 import org.bukkit.block.data.Rotatable;
+import org.bukkit.block.data.type.WallSign;
 import org.bukkit.conversations.Conversation;
 import org.bukkit.conversations.ConversationContext;
 import org.bukkit.conversations.ConversationFactory;
@@ -150,9 +151,8 @@ public class PlayerListener implements Listener {
     }
 
     private Conversation createYesNoConversation(String messageKey, Player player) {
-        return new ConversationFactory(PLUGIN)
-                .withPrefix(arg -> ChatColor.translateAlternateColorCodes('&',
-                        Messages.getInstance().getMessage("plugin.prefix")))
+        return new ConversationFactory(PLUGIN).withPrefix(
+                arg -> ChatColor.translateAlternateColorCodes('&', Messages.getInstance().getMessage("plugin.prefix")))
                 .withFirstPrompt(new ValidatingPrompt() {
 
                     @Override
@@ -324,6 +324,12 @@ public class PlayerListener implements Listener {
     @EventHandler
     public void onSignBroken(BlockBreakEvent event) {
         Block block = event.getBlock();
+
+        if (isSignOn(block)) {
+            event.setCancelled(true);
+            return;
+        }
+
         if (!(block.getState() instanceof Sign)) {
             return;
         }
@@ -346,6 +352,25 @@ public class PlayerListener implements Listener {
 
         Plots.getInstance().removeClaim(region.getId());
         Messages.getInstance().sendMessage(event.getPlayer(), "other.remove-plot");
+    }
+
+    private boolean isSignOn(Block block) {
+        Block checking = block.getRelative(BlockFace.UP);
+        if (checking.getBlockData() instanceof org.bukkit.block.data.type.Sign
+                && ((Sign) checking.getState()).getLine(0).equals("[PlotGUI]")) {
+            return true;
+        }
+
+        for (BlockFace face : Set.of(BlockFace.NORTH, BlockFace.EAST, BlockFace.WEST, BlockFace.SOUTH)) {
+            checking = block.getRelative(face);
+            if (checking.getBlockData() instanceof WallSign
+                    && checking.getRelative(((WallSign) checking.getBlockData()).getFacing().getOppositeFace()).equals(block)
+                    && ((Sign) checking.getState()).getLine(0).equals("[PlotGUI]")) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     @EventHandler
@@ -382,6 +407,12 @@ public class PlayerListener implements Listener {
             event.getBlock().breakNaturally();
             Plots.getInstance().placeSign(region.getId());
             return;
+        }
+
+        if (event.getBlock().getBlockData() instanceof WallSign) {
+            event.getBlock().getRelative(((WallSign) event.getBlock().getBlockData()).getFacing().getOppositeFace()).setType(Material.BEDROCK);
+        } else {
+            event.getBlock().getRelative(BlockFace.DOWN).setType(Material.BEDROCK);
         }
 
         plots.addClaim(region.getId(), event.getBlock().getWorld(), event.getBlock().getLocation(),

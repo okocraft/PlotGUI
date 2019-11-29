@@ -24,7 +24,9 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
+import org.bukkit.block.data.Directional;
 import org.bukkit.block.data.Rotatable;
+import org.bukkit.block.data.type.WallSign;
 import org.bukkit.command.CommandSender;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -59,6 +61,7 @@ public final class Plots extends CustomConfig {
         if (owner != null) {
             get().set(claim + ".owner", owner.getUniqueId().toString());
         }
+        get().set(claim + ".is-wallsign", getSignLocation(claim).getBlock().getBlockData() instanceof WallSign);
 
         save();
 
@@ -102,6 +105,10 @@ public final class Plots extends CustomConfig {
         int z = get().getInt(claim + ".sign.z");
 
         return new Location(world, x, y, z);
+    }
+
+    public boolean isWallSign(String claim) {
+        return get().getBoolean(claim + ".is-wallsign");
     }
 
     public BlockFace getSignFacing(String claim) {
@@ -225,11 +232,22 @@ public final class Plots extends CustomConfig {
         if (signLocation == null) {
             return;
         }
+
+        BlockFace facing = getSignFacing(claim);
         Block signBlock = getSignLocation(claim).getBlock();
-        signBlock.setType(Material.OAK_SIGN);
-        Rotatable data = (Rotatable) signBlock.getBlockData();
-        data.setRotation(getSignFacing(claim));
-        signBlock.setBlockData(data);
+        if (isWallSign(claim)) {
+            signBlock.getRelative(facing.getOppositeFace()).setType(Material.BEDROCK);
+            signBlock.setType(Material.OAK_WALL_SIGN);
+            Directional data = (Directional) signBlock.getBlockData();
+            data.setFacing(facing);
+            signBlock.setBlockData(data);
+        } else {
+            signBlock.getRelative(BlockFace.DOWN).setType(Material.BEDROCK);
+            signBlock.setType(Material.OAK_SIGN);
+            Rotatable data = (Rotatable) signBlock.getBlockData();
+            data.setRotation(facing);
+            signBlock.setBlockData(data);
+        }
 
         Sign sign = (Sign) signBlock.getState();
         sign.setLine(0, "[PlotGUI]");
