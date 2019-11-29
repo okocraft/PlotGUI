@@ -1,0 +1,34 @@
+plugin:
+  version: ${project.version}
+  prefix: "&8[&6PlotGUI&8]&r"
+
+command:
+  general:
+    info:
+      usage: "&7使用法: &b%usage%"
+    error:
+      invalid-argument: "&c%argument% という引数は存在しません。"
+      no-permission: "&c%permission% の権限がありません。"
+      cannot-use-from-console: "&cこのコマンドはコンソールからは使えません。"
+      player-cannot-use: "&cこのコマンドはプレイヤーには使えません。"
+      not-enough-arguments: "&c引数が足りません。"
+      invalid-number: "&c%number% は不正な数字です。"
+      no-player-found: "&c%player% というプレイヤーが見つかりませんでした。"
+
+gui:
+  playerlist-title: "プレイヤー選択"
+  management-title: "保護管理GUI"
+  confirm-abandon: "&c区画を放棄すると、建築物が削除されます！ 本当に放棄してもいいですか？ 放棄する場合は &by &c、キャンセルする場合は &bn &cと発言してください。"
+  confirm-regen: "&c区画を再生成すると、建築物が削除されます！ 本当に再生性してもいいですか？ 再生成する場合は &by &c、キャンセルする場合は &bn &cと発言してください。"
+  regen-cooldown: "&cクールダウン中です。あと &b%cooldown% &c秒待ってください。"
+  regen-finish: "&7再生成が完了しました。経過時間: &b%time% &7秒"
+  
+other:
+  click-here-to-claim: "クリックして保護" # 看板に使われる。
+  cannot-claim-anymore: "&cこれ以上区画を保護できません。"
+  confirm-claim: "&7ここを保護するなら、もう一度看板をクリックしてください。"
+  claim-success: "&b%region% &7を保護しました！"
+  here-is-other-players-region: "&7ここは &b%owner% &7の区画です。"
+  sign-is-already-registered: "&cすでに看板が登録されています。"
+  no-protection: "&cここには保護が存在しません。"
+  remove-plot: "&7区画を削除しました。"

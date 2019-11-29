@@ -1,0 +1,27 @@
+name: ${project.artifactId}
+version: ${project.version}
+main: net.okocraft.plotgui.PlotGUI
+api-version: 1.14
+author: LazyGon
+
+# commands:
+#   command:
+#     description: Base Command of this plugin.
+
+permissions:
+  plotgui.*:
+    description: "全権"
+    default: op
+    children:
+      plotgui.mod: true
+      plotgui.sign.remove: true
+      plotgui.sign.place: true
+  plotgui.mod:
+    description: "他の人の区画でも管理GUIを開ける権限"
+    default: op
+  plotgui.sign.remove:
+    description: "看板を破壊して区画を削除する権限"
+    default: op
+  plotgui.sign.place:
+    description: "看板を設置して区画を作成する権限"
+    default: op

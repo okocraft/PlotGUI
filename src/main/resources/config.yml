@@ -1,0 +1,60 @@
+gui:
+  open-sound: BLOCK_CHEST_OPEN
+
+regen:
+  plot-purge-days: 60
+  blocks-per-tick-unit: 8192 # tick-unitで指定した単位tick数ごとに再生成するブロック数。
+  tick-unit: 10 # blocks-per-tick-unitで指定したブロック数を、このtickごとに再生成する。 
+
+icons:
+  add-member:
+    material: JACK_O_LANTERN
+    display-name: "&fメンバー追加"
+    lore:
+      - "&f保護メンバー追加画面に遷移します"
+  remove-member:
+    material: CARVED_PUMPKIN
+    display-name: "&fメンバー削除"
+    lore:
+      - "&f保護メンバー削除画面に遷移します"
+  change-owner:
+    material: PLAYER_HEAD
+    display-name: "&fオーナー変更"
+    lore:
+      - "&f別のプレイヤーにオーナー権を譲り渡します"
+      - "&f自分が居なくなっても保護が消されなくなりますが"
+      - "&fその代わりこの管理画面を開けなくなります"
+      - "&fオーナー権を譲ってもメンバーになるだけなので"
+      - "&fブロック編集は可能です"
+      - "&f"
+      - "&fこの保護のオーナー: %owner%"
+  regen-plot:
+    material: BARRIER
+    display-name: "&c保護の再生成"
+    lore:
+      - "&f地形をリセットします"
+  abandon-plot:
+    material: TNT
+    display-name: "&4保護の放棄"
+    lore:
+      - "&f保護を捨てて、地形をリセットします"
+  flame:
+    material: BLACK_GLASS_PANE
+    display-name: "&r"
+  player-head:
+    display-name: "&f%name%"
+    lore:
+      - "&7uuid: %uuid%"
+  previous-page:
+    material: ARROW
+    display-name: "&f前ページ"
+    lore:
+      - "&f%page% ページに移動する"
+  next-page:
+    material: ARROW
+    display-name: "&f次ページ"
+    lore:
+      - "&f%page% ページに移動する"
+  back-to-main:
+    material: OAK_DOOR
+    display-name: "&fメインメニューに戻る"
