@@ -263,7 +263,7 @@ public final class Plots extends CustomConfig {
 
     public boolean regen(String claim, CommandSender executor) {
         long startTime = System.currentTimeMillis();
-        long cooldown = regenCooldown.getOrDefault(claim, 0L) + 1000 * 60 * 60 - startTime;
+        long cooldown = regenCooldown.getOrDefault(claim, 0L) + 1000 * Config.getInstance().getRegenCooldown() - startTime;
         if (cooldown > 0) {
             Messages.getInstance().sendMessage(executor, "gui.regen-cooldown",
                     Map.of("%cooldown%", String.valueOf(cooldown / 1000)));

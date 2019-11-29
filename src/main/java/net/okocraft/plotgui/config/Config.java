@@ -48,6 +48,10 @@ public final class Config extends CustomConfig {
                 1
         );
     }
+
+    public int getRegenCooldown() {
+        return get().getInt("regen.cooldown", 600);
+    }
     
     public int getPlotPurgeDays() {
         return get().getInt("regen.plot-purge-days", 60);
