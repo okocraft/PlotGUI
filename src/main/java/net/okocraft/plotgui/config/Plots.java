@@ -135,8 +135,11 @@ public final class Plots extends CustomConfig {
         placeSign(claim);
     }
 
-    public void removeOwner(String claim, OfflinePlayer owner) {
+    public void removeOwner(String claim) {
+        OfflinePlayer owner = getOwner(claim);
+        if (owner != null) {
             addMember(claim, owner);
+        }
         get().set(claim + ".owner", null);
         save();
         placeSign(claim);

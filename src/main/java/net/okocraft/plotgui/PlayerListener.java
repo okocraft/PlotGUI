@@ -143,7 +143,7 @@ public class PlayerListener implements Listener {
             if ((boolean) abandandedEvent.getContext().getSessionData("response")) {
                 Plots.getInstance().regen(region.getId(), player);
                 if (abandon) {
-                    Plots.getInstance().setOwner(region.getId(), null);
+                    Plots.getInstance().removeOwner(region.getId());
                 }
             }
         });
