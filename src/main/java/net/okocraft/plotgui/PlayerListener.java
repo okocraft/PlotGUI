@@ -1,6 +1,6 @@
 package net.okocraft.plotgui;
 
-import java.util.HashSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -59,7 +59,7 @@ public class PlayerListener implements Listener {
     private static final PlotGUI PLUGIN = PlotGUI.getInstance();
     private static final PlayerListener INSTANCE = new PlayerListener();
 
-    private final Set<Player> confirm = new HashSet<>();
+    private final Map<Player, String> confirm = new HashMap<>();
 
     private PlayerListener() {
     }
@@ -276,11 +276,11 @@ public class PlayerListener implements Listener {
 
         String regionId = region.getId();
         if (!Plots.getInstance().getClaims().contains(regionId)) {
-            Plots.getInstance().addClaim(region.getId(), sign.getWorld(), sign.getLocation(),
+            Plots.getInstance().addClaim(regionId, sign.getWorld(), sign.getLocation(),
                     Optional.ofNullable(getBackFace(sign.getBlock())).orElse(BlockFace.NORTH).getOppositeFace(), null);
         }
 
-        sign.setLine(1, region.getId());
+        sign.setLine(1, regionId);
 
         Player player = event.getPlayer();
 
@@ -290,8 +290,8 @@ public class PlayerListener implements Listener {
             if (Plots.getInstance().hasClaim(player)) {
                 Messages.getInstance().sendMessage(player, "other.cannot-claim-anymore");
 
-            } else if (confirm.contains(player)) {
-                Messages.getInstance().sendMessage(player, "other.claim-success", Map.of("%region%", region.getId()));
+            } else if (confirm.getOrDefault(player, "").equals(regionId)) {
+                Messages.getInstance().sendMessage(player, "other.claim-success", Map.of("%region%", regionId));
                 Plots.getInstance().setOwner(regionId, player);
                 confirm.remove(player);
                 region.getMembers().addPlayer(WorldGuardPlugin.inst().wrapPlayer(player));
@@ -299,7 +299,7 @@ public class PlayerListener implements Listener {
 
             } else {
                 Messages.getInstance().sendMessage(player, "other.confirm-claim");
-                confirm.add(player);
+                confirm.put(player, regionId);
             }
         } else {
             String ownerName = Optional.ofNullable(owner.getName()).orElse("null");
