@@ -26,11 +26,11 @@ import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
 import org.bukkit.block.data.Directional;
 import org.bukkit.block.data.Rotatable;
-import org.bukkit.block.data.type.WallSign;
 import org.bukkit.command.CommandSender;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import net.okocraft.plotgui.PlotGUI;
+import net.okocraft.plotgui.Utility;
 
 public final class Plots extends CustomConfig {
 
@@ -48,8 +48,7 @@ public final class Plots extends CustomConfig {
     }
 
     public void addClaim(String claim, World world, Location sign, BlockFace signDirection, OfflinePlayer owner) {
-        ProtectedRegion region = WorldGuard.getInstance().getPlatform().getRegionContainer()
-                .get(BukkitAdapter.adapt(world)).getRegion(claim);
+        ProtectedRegion region = Utility.getRegion(world, claim);
         if (region == null) {
             return;
         }
@@ -62,7 +61,7 @@ public final class Plots extends CustomConfig {
         if (owner != null) {
             get().set(claim + ".owner", owner.getUniqueId().toString());
         }
-        get().set(claim + ".is-wallsign", getSignLocation(claim).getBlock().getBlockData() instanceof WallSign);
+        get().set(claim + ".is-wallsign", Utility.isWallSign(getSignLocation(claim).getBlock()));
 
         save();
 

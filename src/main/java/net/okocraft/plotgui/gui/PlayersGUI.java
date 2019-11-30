@@ -130,6 +130,10 @@ public class PlayersGUI implements InventoryHolder {
         return previousGUIClickedSlot;
     }
 
+    public static boolean isPlayersGUI(Inventory inventory) {
+        return inventory != null && inventory.getHolder() != null && inventory.getHolder() instanceof PlayersGUI;
+    }
+
     @Override
     public Inventory getInventory() {
         return inventory;
