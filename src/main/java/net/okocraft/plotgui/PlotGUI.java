@@ -7,6 +7,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import net.okocraft.plotgui.config.Config;
 import net.okocraft.plotgui.config.Plots;
+import net.okocraft.plotgui.listener.GUIListener;
+import net.okocraft.plotgui.listener.SignListener;
 
 public class PlotGUI extends JavaPlugin {
 
@@ -15,7 +17,8 @@ public class PlotGUI extends JavaPlugin {
     @Override
     public void onEnable() {
         Config.getInstance().reloadAllConfigs();
-        PlayerListener.getInstance().start();
+        SignListener.getInstance().start();
+        GUIListener.getInstance().start();
 
         Plots.getInstance().regenMultiRegions(
                 Plots.getInstance().getInactiveClaims(Config.getInstance().getPlotPurgeDays()),
