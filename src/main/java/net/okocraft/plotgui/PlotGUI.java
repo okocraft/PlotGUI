@@ -21,7 +21,7 @@ public class PlotGUI extends JavaPlugin {
         GUIListener.getInstance().start();
 
         Plots.getInstance().regenMultiRegions(
-                Plots.getInstance().getInactiveClaims(Config.getInstance().getPlotPurgeDays()),
+                Plots.getInstance().getInactivePlots(Config.getInstance().getPlotPurgeDays()),
                 Bukkit.getConsoleSender());
     }
 

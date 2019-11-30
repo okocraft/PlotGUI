@@ -79,8 +79,8 @@ public class SignListener implements Listener {
         }
 
         String regionId = region.getId();
-        if (!PLOTS.getClaims().contains(regionId)) {
-            PLOTS.addClaim(regionId, sign.getWorld(), sign.getLocation(),
+        if (!PLOTS.getPlots().contains(regionId)) {
+            PLOTS.addPlot(regionId, sign.getWorld(), sign.getLocation(),
                     Utility.getSignFace(sign.getBlock()).getOppositeFace(), null);
         }
 
@@ -91,7 +91,7 @@ public class SignListener implements Listener {
         OfflinePlayer owner = PLOTS.getOwner(regionId);
         if (owner == null) {
             sign.setLine(2, Messages.getInstance().getMessage("other.click-here-to-claim"));
-            if (PLOTS.hasClaim(player)) {
+            if (PLOTS.hasPlot(player)) {
                 Messages.getInstance().sendMessage(player, "other.cannot-claim-anymore");
 
             } else if (confirm.getOrDefault(player, "").equals(regionId)) {
@@ -147,7 +147,7 @@ public class SignListener implements Listener {
             return;
         }
 
-        PLOTS.removeClaim(region.getId());
+        PLOTS.removePlot(region.getId());
         Messages.getInstance().sendMessage(event.getPlayer(), "other.remove-plot");
     }
 
@@ -178,7 +178,7 @@ public class SignListener implements Listener {
         } catch (NoSuchElementException ignored) {
         }
 
-        if (PLOTS.getClaims().contains(region.getId())) {
+        if (PLOTS.getPlots().contains(region.getId())) {
             Messages.getInstance().sendMessage(event.getPlayer(), "other.sign-is-already-registered");
             event.getBlock().breakNaturally();
             PLOTS.placeSign(region.getId());
@@ -191,7 +191,7 @@ public class SignListener implements Listener {
             event.getBlock().getRelative(BlockFace.DOWN).setType(Material.BEDROCK);
         }
 
-        PLOTS.addClaim(region.getId(), event.getBlock().getWorld(), event.getBlock().getLocation(),
+        PLOTS.addPlot(region.getId(), event.getBlock().getWorld(), event.getBlock().getLocation(),
                 Utility.getSignFace(event.getBlock()), owner);
 
         event.setLine(1, region.getId());

@@ -47,21 +47,21 @@ public final class Plots extends CustomConfig {
         return INSTANCE;
     }
 
-    public void addClaim(String claim, World world, Location sign, BlockFace signDirection, OfflinePlayer owner) {
-        ProtectedRegion region = Utility.getRegion(world, claim);
+    public void addPlot(String plotName, World world, Location sign, BlockFace signDirection, OfflinePlayer owner) {
+        ProtectedRegion region = Utility.getRegion(world, plotName);
         if (region == null) {
             return;
         }
 
-        get().set(claim + ".world", world.getName());
-        get().set(claim + ".sign.x", sign.getBlockX());
-        get().set(claim + ".sign.y", sign.getBlockY());
-        get().set(claim + ".sign.z", sign.getBlockZ());
-        get().set(claim + ".sign.facing", signDirection.name());
+        get().set(plotName + ".world", world.getName());
+        get().set(plotName + ".sign.x", sign.getBlockX());
+        get().set(plotName + ".sign.y", sign.getBlockY());
+        get().set(plotName + ".sign.z", sign.getBlockZ());
+        get().set(plotName + ".sign.facing", signDirection.name());
         if (owner != null) {
-            get().set(claim + ".owner", owner.getUniqueId().toString());
+            get().set(plotName + ".owner", owner.getUniqueId().toString());
         }
-        get().set(claim + ".is-wallsign", Utility.isWallSign(getSignLocation(claim).getBlock()));
+        get().set(plotName + ".is-wallsign", Utility.isWallSign(getSignLocation(plotName).getBlock()));
 
         save();
 
@@ -69,83 +69,83 @@ public final class Plots extends CustomConfig {
         region.getOwners().clear();
     }
 
-    public boolean removeClaim(String claim) {
-        if (!get().isConfigurationSection(claim)) {
+    public boolean removePlot(String plotName) {
+        if (!get().isConfigurationSection(plotName)) {
             return false;
         }
-        get().set(claim, null);
+        get().set(plotName, null);
         save();
         return true;
     }
 
-    public String getWorldName(String claim) {
-        return get().getString(claim + ".world", "");
+    public String getWorldName(String plotName) {
+        return get().getString(plotName + ".world", "");
     }
 
-    public Location getSignLocation(String claim) {
-        World world = Bukkit.getWorld(getWorldName(claim));
+    public Location getSignLocation(String plotName) {
+        World world = Bukkit.getWorld(getWorldName(plotName));
         if (world == null) {
-            PLUGIN.getLogger().warning("The world " + getWorldName(claim) + " does not exist.");
+            PLUGIN.getLogger().warning("The world " + getWorldName(plotName) + " does not exist.");
             return null;
         }
 
-        if (!get().isInt(claim + ".sign.x")) {
-            PLUGIN.getLogger().warning("Sign coordinate x is not set for " + claim + ".");
+        if (!get().isInt(plotName + ".sign.x")) {
+            PLUGIN.getLogger().warning("Sign coordinate x is not set for " + plotName + ".");
             return null;
-        } else if (!get().isInt(claim + ".sign.y")) {
-            PLUGIN.getLogger().warning("Sign coordinate y is not set for " + claim + ".");
+        } else if (!get().isInt(plotName + ".sign.y")) {
+            PLUGIN.getLogger().warning("Sign coordinate y is not set for " + plotName + ".");
             return null;
-        } else if (!get().isInt(claim + ".sign.z")) {
-            PLUGIN.getLogger().warning("Sign coordinate z is not set for " + claim + ".");
+        } else if (!get().isInt(plotName + ".sign.z")) {
+            PLUGIN.getLogger().warning("Sign coordinate z is not set for " + plotName + ".");
             return null;
         }
 
-        int x = get().getInt(claim + ".sign.x");
-        int y = get().getInt(claim + ".sign.y");
-        int z = get().getInt(claim + ".sign.z");
+        int x = get().getInt(plotName + ".sign.x");
+        int y = get().getInt(plotName + ".sign.y");
+        int z = get().getInt(plotName + ".sign.z");
 
         return new Location(world, x, y, z);
     }
 
-    public boolean isWallSign(String claim) {
-        return get().getBoolean(claim + ".is-wallsign");
+    public boolean isWallSign(String plotName) {
+        return get().getBoolean(plotName + ".is-wallsign");
     }
 
-    public BlockFace getSignFacing(String claim) {
+    public BlockFace getSignFacing(String plotName) {
         try {
-            return BlockFace.valueOf(get().getString(claim + ".sign.facing"));
+            return BlockFace.valueOf(get().getString(plotName + ".sign.facing"));
         } catch (IllegalArgumentException e) {
             return BlockFace.NORTH;
         }
     }
 
-    public OfflinePlayer getOwner(String claim) {
+    public OfflinePlayer getOwner(String plotName) {
         try {
-            return Bukkit.getOfflinePlayer(UUID.fromString(get().getString(claim + ".owner", "")));
+            return Bukkit.getOfflinePlayer(UUID.fromString(get().getString(plotName + ".owner", "")));
         } catch (IllegalArgumentException e) {
             return null;
         }
     }
 
-    public void setOwner(String claim, OfflinePlayer owner) {
-        addMember(claim, getOwner(claim));
-        get().set(claim + ".owner", owner.getUniqueId().toString());
+    public void setOwner(String plotName, OfflinePlayer owner) {
+        addMember(plotName, getOwner(plotName));
+        get().set(plotName + ".owner", owner.getUniqueId().toString());
         save();
-        placeSign(claim);
+        placeSign(plotName);
     }
 
-    public void removeOwner(String claim) {
-        OfflinePlayer owner = getOwner(claim);
+    public void removeOwner(String plotName) {
+        OfflinePlayer owner = getOwner(plotName);
         if (owner != null) {
-            addMember(claim, owner);
+            addMember(plotName, owner);
         }
-        get().set(claim + ".owner", null);
+        get().set(plotName + ".owner", null);
         save();
-        placeSign(claim);
+        placeSign(plotName);
     }
 
-    public Set<OfflinePlayer> getMembers(String claim) {
-        ProtectedRegion region = getRegion(claim);
+    public Set<OfflinePlayer> getMembers(String plotName) {
+        ProtectedRegion region = getRegion(plotName);
         if (region == null) {
             return Set.of();
         }
@@ -154,8 +154,8 @@ public final class Plots extends CustomConfig {
                 .collect(Collectors.toSet());
     }
 
-    public boolean addMember(String claim, OfflinePlayer player) {
-        ProtectedRegion region = getRegion(claim);
+    public boolean addMember(String plotName, OfflinePlayer player) {
+        ProtectedRegion region = getRegion(plotName);
         if (region == null || player == null) {
             return false;
         }
@@ -177,8 +177,8 @@ public final class Plots extends CustomConfig {
         return true;
     }
 
-    public boolean removeMember(String claim, OfflinePlayer player) {
-        ProtectedRegion region = getRegion(claim);
+    public boolean removeMember(String plotName, OfflinePlayer player) {
+        ProtectedRegion region = getRegion(plotName);
         if (region == null || player == null) {
             return false;
         }
@@ -187,56 +187,56 @@ public final class Plots extends CustomConfig {
         return true;
     }
 
-    public ProtectedRegion getRegion(String claim) {
-        if (claim == null) {
+    public ProtectedRegion getRegion(String plotName) {
+        if (plotName == null) {
             return null;
         }
 
-        Location signLocation = getSignLocation(claim);
+        Location signLocation = getSignLocation(plotName);
         if (signLocation == null) {
             return null;
         }
 
         return WorldGuard.getInstance().getPlatform().getRegionContainer()
-                .get(BukkitAdapter.adapt(signLocation.getWorld())).getRegion(claim);
+                .get(BukkitAdapter.adapt(signLocation.getWorld())).getRegion(plotName);
     }
 
-    public Set<String> getClaims() {
-        return get().getKeys(false).stream().filter(claim -> getSignLocation(claim) != null)
-                .filter(claim -> getSignFacing(claim) != null).collect(Collectors.toSet());
+    public Set<String> getPlots() {
+        return get().getKeys(false).stream().filter(plotName -> getSignLocation(plotName) != null)
+                .filter(plotName -> getSignFacing(plotName) != null).collect(Collectors.toSet());
     }
 
-    public boolean hasClaim(OfflinePlayer player) {
-        Set<String> claims = getClaims();
-        if (claims.size() > 100) {
-            return getClaims().parallelStream().map(this::getOwner).filter(Objects::nonNull).anyMatch(player::equals);
+    public boolean hasPlot(OfflinePlayer player) {
+        Set<String> plots = getPlots();
+        if (plots.size() > 100) {
+            return getPlots().parallelStream().map(this::getOwner).filter(Objects::nonNull).anyMatch(player::equals);
         } else {
-            return getClaims().stream().map(this::getOwner).filter(Objects::nonNull).anyMatch(player::equals);
+            return getPlots().stream().map(this::getOwner).filter(Objects::nonNull).anyMatch(player::equals);
         }
     }
 
-    public String getClaimBySignLocation(Location signLocation) {
-        for (String claim : getClaims()) {
-            Location currentLocation = getSignLocation(claim);
+    public String getPlotBySignLocation(Location signLocation) {
+        for (String plotName : getPlots()) {
+            Location currentLocation = getSignLocation(plotName);
             if (currentLocation.getBlockX() == signLocation.getBlockX()
                     && currentLocation.getBlockY() == signLocation.getBlockY()
                     && currentLocation.getBlockZ() == signLocation.getBlockZ()) {
-                return claim;
+                return plotName;
             }
         }
 
         return null;
     }
 
-    public void placeSign(String claim) {
-        Location signLocation = getSignLocation(claim);
+    public void placeSign(String plotName) {
+        Location signLocation = getSignLocation(plotName);
         if (signLocation == null) {
             return;
         }
 
-        BlockFace facing = getSignFacing(claim);
-        Block signBlock = getSignLocation(claim).getBlock();
-        if (isWallSign(claim)) {
+        BlockFace facing = getSignFacing(plotName);
+        Block signBlock = getSignLocation(plotName).getBlock();
+        if (isWallSign(plotName)) {
             signBlock.getRelative(facing.getOppositeFace()).setType(Material.BEDROCK);
             signBlock.setType(Material.OAK_WALL_SIGN);
             Directional data = (Directional) signBlock.getBlockData();
@@ -252,49 +252,49 @@ public final class Plots extends CustomConfig {
 
         Sign sign = (Sign) signBlock.getState();
         sign.setLine(0, "[PlotGUI]");
-        sign.setLine(1, claim);
-        OfflinePlayer owner = getOwner(claim);
+        sign.setLine(1, plotName);
+        OfflinePlayer owner = getOwner(plotName);
         String line2 = owner == null ? Messages.getInstance().getMessage("other.click-here-to-claim")
                 : Optional.ofNullable(owner.getName()).orElse(owner.getUniqueId().toString());
         sign.setLine(2, line2);
         sign.update();
     }
 
-    public boolean regen(String claim, CommandSender executor) {
+    public boolean regen(String plotName, CommandSender executor) {
         long startTime = System.currentTimeMillis();
-        long cooldown = regenCooldown.getOrDefault(claim, 0L) + 1000 * Config.getInstance().getRegenCooldown() - startTime;
+        long cooldown = regenCooldown.getOrDefault(plotName, 0L) + 1000 * Config.getInstance().getRegenCooldown() - startTime;
         if (cooldown > 0) {
             Messages.getInstance().sendMessage(executor, "gui.regen-cooldown",
                     Map.of("%cooldown%", String.valueOf(cooldown / 1000)));
             return false;
         }
-        regenCooldown.put(claim, startTime);
+        regenCooldown.put(plotName, startTime);
 
         regenMultiRegions(new HashSet<String>() {
             private static final long serialVersionUID = 1L;
             {
-                add(claim);
+                add(plotName);
             }
         }, executor);
         return true;
     }
 
-    public void regenMultiRegions(Set<String> claims, CommandSender executor) {
-        String claim;
+    public void regenMultiRegions(Set<String> plotNames, CommandSender executor) {
+        String plotName;
         try {
-            claim = claims.iterator().next();
-            claims.remove(claim);
+            plotName = plotNames.iterator().next();
+            plotNames.remove(plotName);
         } catch (NoSuchElementException e) {
             return;
         }
 
-        Location signLocation = getSignLocation(claim);
+        Location signLocation = getSignLocation(plotName);
         if (signLocation == null) {
             return;
         }
 
         ProtectedRegion region = WorldGuard.getInstance().getPlatform().getRegionContainer()
-                .get(BukkitAdapter.adapt(signLocation.getWorld())).getRegion(claim);
+                .get(BukkitAdapter.adapt(signLocation.getWorld())).getRegion(plotName);
         if (region == null) {
             return;
         }
@@ -337,14 +337,14 @@ public final class Plots extends CustomConfig {
                     currentLocation.setX(x);
                 }
 
-                Plots.getInstance().placeSign(claim);
+                Plots.getInstance().placeSign(plotName);
 
                 cancel();
-                PLUGIN.getLogger().info("Plot regen operation on " + claim + " finished in "
+                PLUGIN.getLogger().info("Plot regen operation on " + plotName + " finished in "
                         + (System.currentTimeMillis() - startTime) + " ms.");
                 Messages.getInstance().sendMessage(executor, "gui.regen-finish",
                         Map.of("%time%", String.valueOf((System.currentTimeMillis() - startTime) / 1000)));
-                regenMultiRegions(claims, executor);
+                regenMultiRegions(plotNames, executor);
             }
         }.runTaskTimer(PLUGIN, 0L, Config.getInstance().getRegenTickUnit());
     }
@@ -374,17 +374,17 @@ public final class Plots extends CustomConfig {
      * @param threshold 日数。
      * @return アクティブでない区画保護。
      */
-    public Set<String> getInactiveClaims(int threshold) {
+    public Set<String> getInactivePlots(int threshold) {
         Set<String> result = new HashSet<>();
-        getClaims().forEach(claim -> {
-            OfflinePlayer owner = getOwner(claim);
+        getPlots().forEach(plotName -> {
+            OfflinePlayer owner = getOwner(plotName);
             if (owner == null || !owner.hasPlayedBefore()) {
                 return;
             }
             long lastPlayed = owner.getLastPlayed();
             int noLoginTerm = (int) (System.currentTimeMillis() - lastPlayed) / (1000 * 60 * 60 * 24);
             if (noLoginTerm > threshold) {
-                result.add(claim);
+                result.add(plotName);
             }
         });
 
