@@ -27,6 +27,7 @@ import org.bukkit.block.Sign;
 import org.bukkit.block.data.Directional;
 import org.bukkit.block.data.Rotatable;
 import org.bukkit.command.CommandSender;
+import org.bukkit.entity.Entity;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import net.okocraft.plotgui.PlotGUI;
@@ -218,7 +219,8 @@ public final class Plots extends CustomConfig {
     public String getPlotBySignLocation(Location signLocation) {
         for (String plotName : getPlots()) {
             Location currentLocation = getSignLocation(plotName);
-            if (currentLocation.getBlockX() == signLocation.getBlockX()
+            if (currentLocation.getWorld().equals(signLocation.getWorld())
+                    && currentLocation.getBlockX() == signLocation.getBlockX()
                     && currentLocation.getBlockY() == signLocation.getBlockY()
                     && currentLocation.getBlockZ() == signLocation.getBlockZ()) {
                 return plotName;
@@ -262,7 +264,8 @@ public final class Plots extends CustomConfig {
 
     public boolean regen(String plotName, CommandSender executor) {
         long startTime = System.currentTimeMillis();
-        long cooldown = regenCooldown.getOrDefault(plotName, 0L) + 1000 * Config.getInstance().getRegenCooldown() - startTime;
+        long cooldown = regenCooldown.getOrDefault(plotName, 0L) + 1000 * Config.getInstance().getRegenCooldown()
+                - startTime;
         if (cooldown > 0) {
             Messages.getInstance().sendMessage(executor, "gui.regen-cooldown",
                     Map.of("%cooldown%", String.valueOf(cooldown / 1000)));
@@ -302,9 +305,12 @@ public final class Plots extends CustomConfig {
         new BukkitRunnable() {
             final long startTime = System.currentTimeMillis();
             final int floorHeight = signLocation.getBlockY() - 1;
-            int x = region.getMinimumPoint().getBlockX();
-            int y = region.getMinimumPoint().getBlockY();
-            int z = region.getMinimumPoint().getBlockZ();
+            int minX = region.getMinimumPoint().getBlockX();
+            int minY = region.getMinimumPoint().getBlockY();
+            int minZ = region.getMinimumPoint().getBlockZ();
+            int x = minX;
+            int y = minY;
+            int z = minZ;
             int maxX = region.getMaximumPoint().getBlockX();
             int maxY = region.getMaximumPoint().getBlockY();
             int maxZ = region.getMaximumPoint().getBlockZ();
@@ -336,6 +342,15 @@ public final class Plots extends CustomConfig {
                     currentLocation.setY(y);
                     currentLocation.setX(x);
                 }
+
+                // TODO: test
+                currentLocation.getWorld().getEntities().stream().filter(entity -> {
+                    Location loc = entity.getLocation();
+                    double x = loc.getX();
+                    double y = loc.getY();
+                    double z = loc.getZ();
+                    return minX <= x && x <= maxX + 1 && minY <= y && y <= maxY && minZ <= z && z <= maxZ + 1;
+                }).forEach(Entity::remove);
 
                 Plots.getInstance().placeSign(plotName);
 

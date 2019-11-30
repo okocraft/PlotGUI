@@ -73,6 +73,16 @@ public class SignListener implements Listener {
             return;
         }
 
+        Player player = event.getPlayer();
+
+        String plotName = PLOTS.getPlotBySignLocation(clicked.getLocation());
+        if (Utility.getRegion(clicked.getWorld(), plotName) == null) {
+            PLOTS.removePlot(plotName);
+            clicked.breakNaturally();
+            Messages.getInstance().sendMessage(player, "other.no-plot-with-name", Map.of("%name%", plotName));
+            return;
+        }
+
         ProtectedRegion region = Utility.getRegionAtOrBihind(clicked);
         if (region == null) {
             return;
@@ -85,8 +95,6 @@ public class SignListener implements Listener {
         }
 
         sign.setLine(1, regionId);
-
-        Player player = event.getPlayer();
 
         OfflinePlayer owner = PLOTS.getOwner(regionId);
         if (owner == null) {

@@ -31,4 +31,5 @@ other:
   here-is-other-players-region: "&7ここは &b%owner% &7の区画です。"
   sign-is-already-registered: "&cすでに看板が登録されています。"
   no-protection: "&cここには保護が存在しません。"
+  no-plot-with-name: "&c%plot% という名前のプロットは存在しません。"
   remove-plot: "&7区画を削除しました。"
