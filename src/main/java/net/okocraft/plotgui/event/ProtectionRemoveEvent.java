@@ -21,7 +21,7 @@ public class ProtectionRemoveEvent extends ProtectionEvent {
         return region;
     }
 
-    public World getFromWorld() {
+    public World getWorld() {
         return world;
     }
 }
