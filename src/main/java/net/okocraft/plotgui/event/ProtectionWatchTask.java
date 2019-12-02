@@ -26,9 +26,6 @@ public class ProtectionWatchTask extends BukkitRunnable {
     @Override
     public void run() {
         for (World world : Bukkit.getWorlds()) {
-            if (!world.getName().equals("test")) {
-                continue;
-            }
             com.sk89q.worldedit.world.World weWorld = BukkitAdapter.adapt(world);
             Collection<ProtectedRegion> previousWorldRegions = previousRegions.get(world);
 
