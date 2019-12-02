@@ -19,10 +19,13 @@ public class PlotGUI extends JavaPlugin {
         Config.getInstance().reloadAllConfigs();
         SignListener.getInstance().start();
         GUIListener.getInstance().start();
+        ProtectionListener.getInstance().start();
 
         Plots.getInstance().regenMultiRegions(
                 Plots.getInstance().getInactivePlots(Config.getInstance().getPlotPurgeDays()),
                 Bukkit.getConsoleSender());
+
+        new ProtectionWatchTask().runTaskTimerAsynchronously(this, 0L, 20L);
     }
 
     @Override
