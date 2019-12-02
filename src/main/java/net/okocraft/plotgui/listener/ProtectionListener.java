@@ -6,7 +6,6 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.event.Cancellable;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
@@ -39,24 +38,29 @@ public class ProtectionListener implements Listener {
 
     @EventHandler
     public void onProtectionRemoved(ProtectionRemoveEvent event) {
-        cancelPlotRemoval(event.getRegion(), event.getWorld(), event);
+        if (isPlot(event.getRegion(), event.getWorld())) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler
     public void onProtectionRenamed(ProtectionRenameEvent event) {
-        cancelPlotRemoval(event.getFromRegion(), event.getWorld(), event);
+        if (isPlot(event.getFromRegion(), event.getWorld())) {
+            event.setCancelled(true);
+        }
     }
 
-    private void cancelPlotRemoval(ProtectedRegion plot, World world, Cancellable event) {
+    private boolean isPlot(ProtectedRegion plot, World world) {
         if (!PLOTS.getPlots().contains(plot.getId())) {
-            return;
+            return false;
         }
-
+        
         Location signLocation = PLOTS.getSignLocation(plot.getId());
         if (signLocation == null || BukkitAdapter.adapt(signLocation.getWorld()).equals(world)) {
             return;
+            return false;
         }
-
-        event.setCancelled(true);
+        
+        return true;
     }
 }
