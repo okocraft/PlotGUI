@@ -56,8 +56,7 @@ public class ProtectionListener implements Listener {
         }
         
         Location signLocation = PLOTS.getSignLocation(plot.getId());
-        if (signLocation == null || BukkitAdapter.adapt(signLocation.getWorld()).equals(world)) {
-            return;
+        if (signLocation == null || !BukkitAdapter.adapt(signLocation.getWorld()).equals(world)) {
             return false;
         }
         
