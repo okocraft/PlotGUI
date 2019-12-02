@@ -207,5 +207,6 @@ public class SignListener implements Listener {
         String line2 = (owner == null) ? Messages.getInstance().getMessage("other.click-here-to-claim")
                 : Optional.ofNullable(owner.getName()).orElse("null");
         event.setLine(2, line2);
+        event.setLine(3, "");
     }
 }
