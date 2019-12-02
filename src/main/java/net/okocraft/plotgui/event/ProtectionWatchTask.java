@@ -44,11 +44,7 @@ public class ProtectionWatchTask extends BukkitRunnable {
                 continue;
             }
 
-            
-            System.out.println("passed");
-
             previousWorldRegions.removeAll(regions.values());
-            previousWorldRegions.forEach(System.out::println);
             for (ProtectedRegion region : previousWorldRegions) {
                 ProtectedRegion renamed = getRenamed(region, weWorld);
                 if (renamed != null) {
