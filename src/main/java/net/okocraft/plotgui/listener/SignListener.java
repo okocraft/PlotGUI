@@ -69,7 +69,8 @@ public class SignListener implements Listener {
         }
 
         Sign sign = (Sign) clicked.getState();
-        if (!sign.getLine(0).equals("[PlotGUI]")) {
+        
+        if (!Utility.isPlotGUISign(clicked)) {
             return;
         }
 
