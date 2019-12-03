@@ -1,5 +1,6 @@
 package net.okocraft.plotgui.listener;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.logging.Level;
@@ -83,25 +84,27 @@ public class GUIListener implements Listener {
         case 0:
             player.closeInventory();
             List<OfflinePlayer> onlinePlayers = Bukkit.getOnlinePlayers().stream().map(p -> (OfflinePlayer) p)
+                    .filter(canditates -> !Plots.getInstance().getMembers(region.getId()).contains(canditates))
+                    .filter(canditates -> !Plots.getInstance().getOwners(region.getId()).contains(canditates))
                     .collect(Collectors.toList());
             player.openInventory(new PlayersGUI(player, onlinePlayers, gui, 0).getInventory());
             break;
         case 2:
             player.closeInventory();
-            List<OfflinePlayer> members = region.getMembers().getUniqueIds().stream().map(Bukkit::getOfflinePlayer)
-                    .collect(Collectors.toList());
+            List<OfflinePlayer> members = new ArrayList<>(Plots.getInstance().getMembers(region.getId()));
             player.openInventory(new PlayersGUI(player, members, gui, 2).getInventory());
             break;
         case 4:
             player.closeInventory();
-            List<OfflinePlayer> ownerCanditates = region.getMembers().getUniqueIds().stream()
-                    .map(Bukkit::getOfflinePlayer).collect(Collectors.toList());
+            List<OfflinePlayer> ownerCanditates = Bukkit.getOnlinePlayers().stream().map(p -> (OfflinePlayer) p)
+                    .filter(canditates -> !Plots.getInstance().getOwners(region.getId()).contains(canditates))
+                    .collect(Collectors.toList());
             player.openInventory(new PlayersGUI(player, ownerCanditates, gui, 4).getInventory());
             break;
         case 6:
             player.closeInventory();
-            List<OfflinePlayer> owners = region.getOwners().getUniqueIds().stream()
-                    .map(Bukkit::getOfflinePlayer).collect(Collectors.toList());
+            List<OfflinePlayer> owners = new ArrayList<>(Plots.getInstance().getOwners(region.getId()));
+            owners.removeIf(p -> p.getUniqueId().equals(player.getUniqueId()));
             player.openInventory(new PlayersGUI(player, owners, gui, 6).getInventory());
             break;
         case 8:
