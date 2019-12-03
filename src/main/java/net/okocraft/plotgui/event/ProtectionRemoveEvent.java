@@ -5,7 +5,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 /**
  * 定期タスクで削除を監視し、削除されたら発火される。性質上、削除されたそのtickよりも後に発火されることに注意。
- * キャンセルすると削除した保護を再び追加するが、他のプラグインの実装によっては不具合が生じる可能性がある。
+ * キャンセルすると削除した保護を再び追加するため、他のプラグインの実装によっては不具合が生じる可能性がある。
  */
 public class ProtectionRemoveEvent extends ProtectionEvent {
 

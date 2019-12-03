@@ -43,6 +43,11 @@ public class ProtectionListener implements Listener {
         HandlerList.unregisterAll(this);
     }
 
+    /**
+     * 作成した保護がプロットに被っていたら作成をキャンセルするリスナー
+     * 
+     * @param event
+     */
     @EventHandler
     public void onProtectionAdded(ProtectionAddEvent event) {
         RegionManager rm = WorldGuard.getInstance().getPlatform().getRegionContainer().get(event.getWorld());
@@ -54,6 +59,11 @@ public class ProtectionListener implements Listener {
         }
     }
 
+    /**
+     * 消した保護がプロットだったら削除をキャンセルするリスナー。看板を破壊してプロット化を解除していれば削除できる。
+     * 
+     * @param event
+     */
     @EventHandler
     public void onProtectionRemoved(ProtectionRemoveEvent event) {
         if (isPlot(event.getRegion(), event.getWorld())) {
@@ -61,6 +71,11 @@ public class ProtectionListener implements Listener {
         }
     }
 
+    /**
+     * どこかしらのプラグインがプロット保護の名前だけ変更したようなインスタンスを作成して大本の保護と入れ替えた場合、それをキャンセルするリスナー。看板を破壊してプロット化を解除していれば該当操作が可能になる。
+     * 
+     * @param event
+     */
     @EventHandler
     public void onProtectionRenamed(ProtectionRenameEvent event) {
         if (isPlot(event.getFromRegion(), event.getWorld())) {
@@ -72,12 +87,12 @@ public class ProtectionListener implements Listener {
         if (!PLOTS.getPlots().contains(plot.getId())) {
             return false;
         }
-        
+
         Location signLocation = PLOTS.getSignLocation(plot.getId());
         if (signLocation == null || !BukkitAdapter.adapt(signLocation.getWorld()).equals(world)) {
             return false;
         }
-        
+
         return true;
     }
 }
