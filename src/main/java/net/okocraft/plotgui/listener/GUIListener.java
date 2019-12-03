@@ -75,36 +75,34 @@ public class GUIListener implements Listener {
         // slot: action
         // 0: add-member
         // 2: remove-member
-        // 4: change-owner
-        // 6: regen-plot
+        // 4: add-owner
+        // 6: remove-owner
         // 8: abandon-and-regen
         ProtectedRegion region = gui.getRegion();
         switch (event.getSlot()) {
         case 0:
             player.closeInventory();
             List<OfflinePlayer> onlinePlayers = Bukkit.getOnlinePlayers().stream().map(p -> (OfflinePlayer) p)
-                    .filter(p -> !region.getMembers().getUniqueIds().contains(p.getUniqueId()))
                     .collect(Collectors.toList());
             player.openInventory(new PlayersGUI(player, onlinePlayers, gui, 0).getInventory());
             break;
         case 2:
             player.closeInventory();
             List<OfflinePlayer> members = region.getMembers().getUniqueIds().stream().map(Bukkit::getOfflinePlayer)
-                    .filter(member -> !Plots.getInstance().getOwner(region.getId()).equals(member))
                     .collect(Collectors.toList());
             player.openInventory(new PlayersGUI(player, members, gui, 2).getInventory());
             break;
         case 4:
             player.closeInventory();
             List<OfflinePlayer> ownerCanditates = region.getMembers().getUniqueIds().stream()
-                    .map(Bukkit::getOfflinePlayer)
-                    .filter(member -> !Plots.getInstance().getOwner(region.getId()).equals(member))
-                    .collect(Collectors.toList());
+                    .map(Bukkit::getOfflinePlayer).collect(Collectors.toList());
             player.openInventory(new PlayersGUI(player, ownerCanditates, gui, 4).getInventory());
             break;
         case 6:
-            startRegenConversation(false, player, region);
             player.closeInventory();
+            List<OfflinePlayer> owners = region.getOwners().getUniqueIds().stream()
+                    .map(Bukkit::getOfflinePlayer).collect(Collectors.toList());
+            player.openInventory(new PlayersGUI(player, owners, gui, 6).getInventory());
             break;
         case 8:
             startRegenConversation(true, player, region);
@@ -119,8 +117,10 @@ public class GUIListener implements Listener {
                 player);
         conversation.addConversationAbandonedListener(abandandedEvent -> {
             if ((boolean) abandandedEvent.getContext().getSessionData("response")) {
-                if (Plots.getInstance().regen(region.getId(), player) && abandon) {
-                    Plots.getInstance().removeOwner(region.getId());
+                String plotName = region.getId();
+                if (Plots.getInstance().regen(plotName, player) && abandon) {
+                    Plots.getInstance().getOwners(plotName).forEach(owner -> Plots.getInstance().removeOwner(plotName, owner));
+                    Plots.getInstance().getMembers(plotName).forEach(owner -> Plots.getInstance().removeMember(plotName, owner));
                     region.getMembers().clear();
                 }
             }
@@ -210,7 +210,8 @@ public class GUIListener implements Listener {
         // slot: action
         // 0: add-member
         // 2: remove-member
-        // 4: change-owner
+        // 4: add-owner
+        // 6: remove-owner
         switch (gui.getPreviousGUIClickedSlot()) {
         case 0:
             Plots.getInstance().addMember(region.getId(), selectedPlayer);
@@ -221,7 +222,11 @@ public class GUIListener implements Listener {
             gui.getInventory().setItem(event.getSlot(), new ItemStack(Material.AIR));
             break;
         case 4:
-            Plots.getInstance().setOwner(region.getId(), selectedPlayer);
+            Plots.getInstance().addOwner(region.getId(), selectedPlayer);
+            player.closeInventory();
+            break;
+        case 6:
+            Plots.getInstance().removeOwner(region.getId(), selectedPlayer);
             player.closeInventory();
             break;
         }

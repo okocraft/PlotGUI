@@ -97,15 +97,15 @@ public class SignListener implements Listener {
 
         sign.setLine(1, regionId);
 
-        OfflinePlayer owner = PLOTS.getOwner(regionId);
-        if (owner == null) {
+        Set<OfflinePlayer> owners = PLOTS.getOwners(regionId);
+        if (owners.isEmpty()) {
             sign.setLine(2, Messages.getInstance().getMessage("other.click-here-to-claim"));
             if (PLOTS.hasPlot(player)) {
                 Messages.getInstance().sendMessage(player, "other.cannot-claim-anymore");
 
             } else if (confirm.getOrDefault(player, "").equals(regionId)) {
                 Messages.getInstance().sendMessage(player, "other.claim-success", Map.of("%region%", regionId));
-                PLOTS.setOwner(regionId, player);
+                PLOTS.addOwner(regionId, player);
                 confirm.remove(player);
                 region.getMembers().addPlayer(WorldGuardPlugin.inst().wrapPlayer(player));
                 sign.setLine(2, player.getName());
@@ -115,9 +115,11 @@ public class SignListener implements Listener {
                 confirm.put(player, regionId);
             }
         } else {
-            String ownerName = Optional.ofNullable(owner.getName()).orElse("null");
+            Optional<OfflinePlayer> owner = owners.stream().filter(element -> element.getName() != null).findAny();
+            String ownerName = owner.map(OfflinePlayer::getName).orElse("null");
             sign.setLine(2, ownerName);
-            if (player.getUniqueId().equals(owner.getUniqueId()) || player.hasPermission("plotgui.mod")) {
+            if (owners.stream().map(OfflinePlayer::getUniqueId).anyMatch(player.getUniqueId()::equals)
+                    || player.hasPermission("plotgui.mod")) {
                 player.openInventory(new GUI(player, region).getInventory());
             } else {
                 Messages.getInstance().sendMessage(player, "other.here-is-other-players-region",

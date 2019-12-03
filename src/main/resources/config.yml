@@ -18,17 +18,16 @@ icons:
     display-name: "&fメンバー削除"
     lore:
       - "&f保護メンバー削除画面に遷移します"
-  change-owner:
-    material: PLAYER_HEAD
-    display-name: "&fオーナー変更"
+  add-member:
+    material: JACK_O_LANTERN
+    display-name: "&fオーナー追加"
     lore:
-      - "&f別のプレイヤーにオーナー権を譲り渡します"
-      - "&f自分が居なくなっても保護が消されなくなりますが"
-      - "&fその代わりこの管理画面を開けなくなります"
-      - "&fオーナー権を譲ってもメンバーになるだけなので"
-      - "&fブロック編集は可能です"
-      - "&f"
-      - "&fこの保護のオーナー: %owner%"
+      - "&f保護オーナー追加画面に遷移します"
+  remove-member:
+    material: CARVED_PUMPKIN
+    display-name: "&fオーナー削除"
+    lore:
+      - "&f保護オーナー削除画面に遷移します"
   regen-plot:
     material: BARRIER
     display-name: "&c保護の再生成"

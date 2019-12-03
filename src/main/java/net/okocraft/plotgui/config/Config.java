@@ -73,12 +73,14 @@ public final class Config extends CustomConfig {
         return getIcon("remove-member", Map.of());
     }
 
-    public ItemStack getChangeOwnerIcon(String plot) {
-        OfflinePlayer owner = Plots.getInstance().getOwner(plot);
-        String ownerName = Optional.ofNullable(owner.getName()).orElse(owner.getUniqueId().toString());
-        return getIcon("change-owner", Map.of("%owner%", ownerName));
+    public ItemStack getAddOwnerIcon() {
+        return getIcon("add-owner", Map.of());
     }
 
+    public ItemStack getRemoveOwnerIcon() {
+        return getIcon("remove-owner", Map.of());
+    }
+    
     public ItemStack getAbandonIcon() {
         return getIcon("abandon-plot", Map.of());
     }

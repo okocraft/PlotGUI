@@ -7,7 +7,6 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
@@ -59,9 +58,6 @@ public final class Plots extends CustomConfig {
         get().set(plotName + ".sign.y", sign.getBlockY());
         get().set(plotName + ".sign.z", sign.getBlockZ());
         get().set(plotName + ".sign.facing", signDirection.name());
-        if (owner != null) {
-            get().set(plotName + ".owner", owner.getUniqueId().toString());
-        }
         get().set(plotName + ".is-wallsign", Utility.isWallSign(getSignLocation(plotName).getBlock()));
 
         save();
@@ -120,29 +116,47 @@ public final class Plots extends CustomConfig {
         }
     }
 
-    public OfflinePlayer getOwner(String plotName) {
+    public Set<OfflinePlayer> getOwners(String plotName) {
+        ProtectedRegion region = getRegion(plotName);
+        if (region == null) {
+            return Set.of();
+        }
+
+        return region.getOwners().getUniqueIds().stream().map(Bukkit::getOfflinePlayer)
+                .collect(Collectors.toSet());
+    }
+
+    public boolean addOwner(String plotName, OfflinePlayer player) {
+        ProtectedRegion region = getRegion(plotName);
+        if (region == null || player == null) {
+            return false;
+        }
+
+        LocalPlayer localPlayer;
         try {
-            return Bukkit.getOfflinePlayer(UUID.fromString(get().getString(plotName + ".owner", "")));
-        } catch (IllegalArgumentException e) {
-            return null;
+            localPlayer = WorldGuardPlugin.inst().wrapOfflinePlayer(player);
+            if (region.getOwners().contains(localPlayer)) {
+                return false;
+            }
+            region.getOwners().addPlayer(localPlayer);
+        } catch (NullPointerException e) {
+            if (region.getOwners().contains(player.getUniqueId())) {
+                return false;
+            }
+            region.getOwners().addPlayer(player.getUniqueId());
         }
+
+        return true;
     }
 
-    public void setOwner(String plotName, OfflinePlayer owner) {
-        addMember(plotName, getOwner(plotName));
-        get().set(plotName + ".owner", owner.getUniqueId().toString());
-        save();
-        placeSign(plotName);
-    }
-
-    public void removeOwner(String plotName) {
-        OfflinePlayer owner = getOwner(plotName);
-        if (owner != null) {
-            addMember(plotName, owner);
+    public boolean removeOwner(String plotName, OfflinePlayer player) {
+        ProtectedRegion region = getRegion(plotName);
+        if (region == null || player == null) {
+            return false;
         }
-        get().set(plotName + ".owner", null);
-        save();
-        placeSign(plotName);
+
+        region.getOwners().removePlayer(player.getUniqueId());
+        return true;
     }
 
     public Set<OfflinePlayer> getMembers(String plotName) {
@@ -151,7 +165,7 @@ public final class Plots extends CustomConfig {
             return Set.of();
         }
 
-        return region.getMembers().getUniqueIds().stream().map(Bukkit::getOfflinePlayer).filter(Objects::nonNull)
+        return region.getMembers().getUniqueIds().stream().map(Bukkit::getOfflinePlayer)
                 .collect(Collectors.toSet());
     }
 
@@ -210,9 +224,9 @@ public final class Plots extends CustomConfig {
     public boolean hasPlot(OfflinePlayer player) {
         Set<String> plots = getPlots();
         if (plots.size() > 100) {
-            return getPlots().parallelStream().map(this::getOwner).filter(Objects::nonNull).anyMatch(player::equals);
+            return getPlots().parallelStream().flatMap(plotName -> getOwners(plotName).stream()).anyMatch(player::equals);
         } else {
-            return getPlots().stream().map(this::getOwner).filter(Objects::nonNull).anyMatch(player::equals);
+            return getPlots().stream().flatMap(plotName -> getOwners(plotName).stream()).filter(Objects::nonNull).anyMatch(player::equals);
         }
     }
 
@@ -255,7 +269,7 @@ public final class Plots extends CustomConfig {
         Sign sign = (Sign) signBlock.getState();
         sign.setLine(0, "[PlotGUI]");
         sign.setLine(1, plotName);
-        OfflinePlayer owner = getOwner(plotName);
+        OfflinePlayer owner = getOwners(plotName).iterator().next();
         String line2 = owner == null ? Messages.getInstance().getMessage("other.click-here-to-claim")
                 : Optional.ofNullable(owner.getName()).orElse(owner.getUniqueId().toString());
         sign.setLine(2, line2);
@@ -392,13 +406,15 @@ public final class Plots extends CustomConfig {
     public Set<String> getInactivePlots(int threshold) {
         Set<String> result = new HashSet<>();
         getPlots().forEach(plotName -> {
-            OfflinePlayer owner = getOwner(plotName);
-            if (owner == null || !owner.hasPlayedBefore()) {
-                return;
-            }
-            long lastPlayed = owner.getLastPlayed();
-            int noLoginTerm = (int) (System.currentTimeMillis() - lastPlayed) / (1000 * 60 * 60 * 24);
-            if (noLoginTerm > threshold) {
+            boolean isInactive = getOwners(plotName).stream()
+                    .filter(owner -> owner != null && owner.hasPlayedBefore())
+                    .filter(owner -> {
+                        long lastPlayed = owner.getLastPlayed();
+                        int noLoginTerm = (int) (System.currentTimeMillis() - lastPlayed) / (1000 * 60 * 60 * 24);
+                        return noLoginTerm <= threshold;
+                    }).findAny().isPresent();
+            
+            if (isInactive) {
                 result.add(plotName);
             }
         });

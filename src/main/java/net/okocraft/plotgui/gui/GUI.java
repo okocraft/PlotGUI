@@ -27,9 +27,9 @@ public class GUI implements InventoryHolder {
         inventory.setItem(1, flame);
         inventory.setItem(2, config.getRemoveMemberIcon());
         inventory.setItem(3, flame);
-        inventory.setItem(4, config.getChangeOwnerIcon(region.getId()));
+        inventory.setItem(4, config.getAddOwnerIcon());
         inventory.setItem(5, flame);
-        inventory.setItem(6, config.getRegenIcon());
+        inventory.setItem(6, config.getRemoveOwnerIcon());
         inventory.setItem(7, flame);
         inventory.setItem(8, config.getAbandonIcon());
 
