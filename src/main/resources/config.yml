@@ -18,12 +18,12 @@ icons:
     display-name: "&fメンバー削除"
     lore:
       - "&f保護メンバー削除画面に遷移します"
-  add-member:
+  add-owner:
     material: JACK_O_LANTERN
     display-name: "&fオーナー追加"
     lore:
       - "&f保護オーナー追加画面に遷移します"
-  remove-member:
+  remove-owner:
     material: CARVED_PUMPKIN
     display-name: "&fオーナー削除"
     lore:
