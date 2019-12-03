@@ -266,7 +266,8 @@ public final class Plots extends CustomConfig {
         Sign sign = (Sign) signBlock.getState();
         sign.setLine(0, "[PlotGUI]");
         sign.setLine(1, plotName);
-        OfflinePlayer owner = getOwners(plotName).iterator().next();
+        Set<OfflinePlayer> owners = getOwners(plotName);
+        OfflinePlayer owner = owners.isEmpty() ? null : owners.iterator().next();
         String line2 = owner == null ? Messages.getInstance().getMessage("other.click-here-to-claim")
                 : Optional.ofNullable(owner.getName()).orElse(owner.getUniqueId().toString());
         sign.setLine(2, line2);
