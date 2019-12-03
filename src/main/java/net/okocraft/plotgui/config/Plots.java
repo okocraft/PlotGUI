@@ -357,7 +357,6 @@ public final class Plots extends CustomConfig {
                     currentLocation.setX(x);
                 }
 
-                // TODO: test
                 currentLocation.getWorld().getEntities().stream().filter(entity -> {
                     Location loc = entity.getLocation();
                     double x = loc.getX();
