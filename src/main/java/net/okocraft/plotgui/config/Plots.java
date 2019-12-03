@@ -61,9 +61,6 @@ public final class Plots extends CustomConfig {
         get().set(plotName + ".is-wallsign", Utility.isWallSign(getSignLocation(plotName).getBlock()));
 
         save();
-
-        region.getMembers().addAll(region.getOwners());
-        region.getOwners().clear();
     }
 
     public boolean removePlot(String plotName) {

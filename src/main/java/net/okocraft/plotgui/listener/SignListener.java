@@ -107,7 +107,6 @@ public class SignListener implements Listener {
                 Messages.getInstance().sendMessage(player, "other.claim-success", Map.of("%region%", regionId));
                 PLOTS.addOwner(regionId, player);
                 confirm.remove(player);
-                region.getMembers().addPlayer(WorldGuardPlugin.inst().wrapPlayer(player));
                 sign.setLine(2, player.getName());
 
             } else {
