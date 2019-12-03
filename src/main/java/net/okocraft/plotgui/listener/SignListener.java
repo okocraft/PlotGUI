@@ -77,7 +77,7 @@ public class SignListener implements Listener {
         Player player = event.getPlayer();
 
         String plotName = PLOTS.getPlotBySignLocation(clicked.getLocation());
-        if (plotName == null || Utility.getRegion(clicked.getWorld(), plotName) == null) {
+        if (plotName != null || Utility.getRegion(clicked.getWorld(), plotName) == null) {
             PLOTS.removePlot(plotName);
             clicked.breakNaturally();
             Messages.getInstance().sendMessage(player, "other.no-plot-with-name", Map.of("%name%", plotName));
