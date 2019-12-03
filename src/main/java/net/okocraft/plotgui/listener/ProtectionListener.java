@@ -1,7 +1,13 @@
 package net.okocraft.plotgui.listener;
 
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldedit.world.World;
+import com.sk89q.worldguard.WorldGuard;
+import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 import org.bukkit.Bukkit;
@@ -12,6 +18,7 @@ import org.bukkit.event.Listener;
 
 import net.okocraft.plotgui.PlotGUI;
 import net.okocraft.plotgui.config.Plots;
+import net.okocraft.plotgui.event.ProtectionAddEvent;
 import net.okocraft.plotgui.event.ProtectionRemoveEvent;
 import net.okocraft.plotgui.event.ProtectionRenameEvent;
 
@@ -34,6 +41,17 @@ public class ProtectionListener implements Listener {
 
     public void stop() {
         HandlerList.unregisterAll(this);
+    }
+
+    @EventHandler
+    public void onProtectionAdded(ProtectionAddEvent event) {
+        RegionManager rm = WorldGuard.getInstance().getPlatform().getRegionContainer().get(event.getWorld());
+        Set<ProtectedRegion> plots = PLOTS.getPlots().stream()
+                .filter(plotName -> PLOTS.getWorldName(plotName).equals(event.getWorld().getName()))
+                .map(plotName -> rm.getRegion(plotName)).filter(Objects::nonNull).collect(Collectors.toSet());
+        if (event.getRegion().getIntersectingRegions(plots).size() != 0) {
+            event.setCancelled(true);
+        }
     }
 
     @EventHandler

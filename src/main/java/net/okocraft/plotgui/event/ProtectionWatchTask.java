@@ -36,9 +36,24 @@ public class ProtectionWatchTask extends BukkitRunnable {
                 previousWorldRegions.addAll(regions.values());
                 continue;
             } else if (regions.values().containsAll(previousWorldRegions)) {
-                if (regions.size() > previousWorldRegions.size()) {
-                    previousWorldRegions.clear();
-                    previousWorldRegions.addAll(regions.values());
+                if (regions.size() <= previousWorldRegions.size()) {
+                    continue;
+                }
+                
+                for (ProtectedRegion region : regions.values()) {
+                    if (previousWorldRegions.contains(region)) {
+                        continue;
+                    }
+                    
+                    ProtectionAddEvent event = new ProtectionAddEvent(region, weWorld);
+                    Bukkit.getPluginManager().callEvent(event);
+                    
+                    if (event.isCancelled()) {
+                        rm.removeRegion(region.getId(), RemovalStrategy.UNSET_PARENT_IN_CHILDREN);
+                        continue;
+                    }
+                    
+                    previousWorldRegions.add(region);
                 }
 
                 continue;
@@ -88,7 +103,7 @@ public class ProtectionWatchTask extends BukkitRunnable {
         }
     }
 
-    private ProtectedRegion getRenamed(ProtectedRegion region, com.sk89q.worldedit.world.World world) {        
+    private ProtectedRegion getRenamed(ProtectedRegion region, com.sk89q.worldedit.world.World world) {
         Optional<ProtectedRegion> renamed = region.getIntersectingRegions(rc.get(world).getRegions().values()).stream()
                 .filter(intersecting -> intersecting.getMaximumPoint().equals(region.getMaximumPoint()))
                 .filter(intersecting -> intersecting.getMinimumPoint().equals(region.getMinimumPoint())).findAny();
