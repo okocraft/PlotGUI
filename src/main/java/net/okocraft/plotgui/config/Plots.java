@@ -16,17 +16,20 @@ import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.Container;
 import org.bukkit.block.Sign;
 import org.bukkit.block.data.Directional;
 import org.bukkit.block.data.Rotatable;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import net.okocraft.plotgui.PlotGUI;
@@ -119,8 +122,7 @@ public final class Plots extends CustomConfig {
             return Set.of();
         }
 
-        return region.getOwners().getUniqueIds().stream().map(Bukkit::getOfflinePlayer)
-                .collect(Collectors.toSet());
+        return region.getOwners().getUniqueIds().stream().map(Bukkit::getOfflinePlayer).collect(Collectors.toSet());
     }
 
     public boolean addOwner(String plotName, OfflinePlayer player) {
@@ -162,8 +164,7 @@ public final class Plots extends CustomConfig {
             return Set.of();
         }
 
-        return region.getMembers().getUniqueIds().stream().map(Bukkit::getOfflinePlayer)
-                .collect(Collectors.toSet());
+        return region.getMembers().getUniqueIds().stream().map(Bukkit::getOfflinePlayer).collect(Collectors.toSet());
     }
 
     public boolean addMember(String plotName, OfflinePlayer player) {
@@ -221,9 +222,11 @@ public final class Plots extends CustomConfig {
     public boolean hasPlot(OfflinePlayer player) {
         Set<String> plots = getPlots();
         if (plots.size() > 100) {
-            return getPlots().parallelStream().flatMap(plotName -> getOwners(plotName).stream()).anyMatch(player::equals);
+            return getPlots().parallelStream().flatMap(plotName -> getOwners(plotName).stream())
+                    .anyMatch(player::equals);
         } else {
-            return getPlots().stream().flatMap(plotName -> getOwners(plotName).stream()).filter(Objects::nonNull).anyMatch(player::equals);
+            return getPlots().stream().flatMap(plotName -> getOwners(plotName).stream()).filter(Objects::nonNull)
+                    .anyMatch(player::equals);
         }
     }
 
@@ -327,6 +330,7 @@ public final class Plots extends CustomConfig {
             int maxY = region.getMaximumPoint().getBlockY();
             int maxZ = region.getMaximumPoint().getBlockZ();
             final Location currentLocation = new Location(signLocation.getWorld(), x, y, z);
+            Chunk currentChunk = currentLocation.getBlock().getChunk();
 
             @Override
             public void run() {
@@ -335,6 +339,22 @@ public final class Plots extends CustomConfig {
                 while (x <= maxX) {
                     while (y <= maxY) {
                         while (z <= maxZ) {
+                            if (!currentLocation.getBlock().getChunk().equals(currentChunk)) {
+                                currentChunk.setForceLoaded(false);
+                                currentChunk = currentLocation.getBlock().getChunk();
+                            }
+
+                            if (!currentChunk.isForceLoaded()) {
+                                currentChunk.setForceLoaded(true);
+                            }
+
+                            for (Entity entity : currentChunk.getEntities()) {
+                                if (entity.getLocation().getBlockX() == x && entity.getLocation().getBlockY() == y
+                                        && entity.getLocation().getBlockZ() == z && !(entity instanceof HumanEntity)) {
+                                    entity.remove();
+                                }
+                            }
+
                             regenPosition(currentLocation, floorHeight);
                             blockChanges++;
                             z++;
@@ -355,14 +375,6 @@ public final class Plots extends CustomConfig {
                     currentLocation.setX(x);
                 }
 
-                currentLocation.getWorld().getEntities().stream().filter(entity -> {
-                    Location loc = entity.getLocation();
-                    double x = loc.getX();
-                    double y = loc.getY();
-                    double z = loc.getZ();
-                    return minX <= x && x <= maxX + 1 && minY <= y && y <= maxY && minZ <= z && z <= maxZ + 1;
-                }).forEach(Entity::remove);
-
                 Plots.getInstance().placeSign(plotName);
 
                 cancel();
@@ -377,6 +389,10 @@ public final class Plots extends CustomConfig {
 
     private void regenPosition(Location location, int floor) {
         Block block = location.getBlock();
+        if (block.getState() instanceof Container) {
+            ((Container) block.getState()).getInventory().clear();
+        }
+
         if (block.getType() == Material.BEDROCK) {
             return;
 
@@ -403,19 +419,30 @@ public final class Plots extends CustomConfig {
     public Set<String> getInactivePlots(int threshold) {
         Set<String> result = new HashSet<>();
         getPlots().forEach(plotName -> {
-            boolean isInactive = getOwners(plotName).stream()
-                    .filter(owner -> owner != null && owner.hasPlayedBefore())
-                    .filter(owner -> {
+            Set<OfflinePlayer> owners = getOwners(plotName);
+            boolean isActive = owners.isEmpty()
+                    || owners.stream().filter(owner -> owner != null && owner.hasPlayedBefore()).filter(owner -> {
                         long lastPlayed = owner.getLastPlayed();
-                        int noLoginTerm = (int) (System.currentTimeMillis() - lastPlayed) / (1000 * 60 * 60 * 24);
+                        long cur = System.currentTimeMillis();
+                        int noLoginTerm = (int) ((cur - lastPlayed) / (1000 * 60 * 60 * 24));
                         return noLoginTerm <= threshold;
                     }).findAny().isPresent();
-            
-            if (isInactive) {
+
+            if (!isActive) {
                 result.add(plotName);
             }
         });
 
         return result;
+    }
+
+    public void purgeInactivePlots(int threshold) {
+        Set<String> inactivePlots = getInactivePlots(threshold);
+        inactivePlots.forEach(plotName -> {
+            getOwners(plotName).forEach(owner -> removeOwner(plotName, owner));
+            getMembers(plotName).forEach(owner -> removeMember(plotName, owner));
+        });
+        PLUGIN.getLogger().info(inactivePlots.size() + " region" + (inactivePlots.size() > 1 ? "s" : "") + " is marked as inactive." + (inactivePlots.size() > 0 ? "Then starting regeneration." : ""));
+        regenMultiRegions(inactivePlots, Bukkit.getConsoleSender());
     }
 }

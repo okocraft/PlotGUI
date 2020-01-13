@@ -4,8 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.Set;
 
-import com.sk89q.worldguard.bukkit.WorldGuardPlugin;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 import org.bukkit.Bukkit;
@@ -20,6 +20,7 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
@@ -77,7 +78,7 @@ public class SignListener implements Listener {
         Player player = event.getPlayer();
 
         String plotName = PLOTS.getPlotBySignLocation(clicked.getLocation());
-        if (plotName != null || Utility.getRegion(clicked.getWorld(), plotName) == null) {
+        if (plotName != null && Utility.getRegion(clicked.getWorld(), plotName) == null) {
             PLOTS.removePlot(plotName);
             clicked.breakNaturally();
             Messages.getInstance().sendMessage(player, "other.no-plot-with-name", Map.of("%name%", plotName));
@@ -209,5 +210,133 @@ public class SignListener implements Listener {
                 : Optional.ofNullable(owner.getName()).orElse("null");
         event.setLine(2, line2);
         event.setLine(3, "");
+    }
+
+    @EventHandler
+    public void onSignPlaced(BlockPlaceEvent event) {
+        Block block = event.getBlockPlaced();
+        if (!Utility.isSign(block)) {
+            return;
+        }
+
+        Sign sign = (Sign) block.getState();
+
+        if (!sign.getLine(0).equalsIgnoreCase("[PlotGui]")) {
+            return;
+        }
+
+        if (!event.getPlayer().hasPermission("plotgui.sign.place")) {
+            event.setCancelled(true);
+            Messages.getInstance().sendNoPermission(event.getPlayer(), "plotgui.sign.place");
+            return;
+        }
+
+        sign.setLine(0, "[PlotGUI]");
+
+        ProtectedRegion region = Utility.getRegionAtOrBihind(block);
+        if (region == null) {
+            event.setCancelled(true);
+            Messages.getInstance().sendMessage(event.getPlayer(), "other.no-protection");
+            return;
+
+            // TODO: 設定が終わったらこのブロック内の以下のコードを消し去る。
+            /*
+            BlockFace oppositeFace = Utility.getSignFace(block).getOppositeFace();
+            Block regionBlock = block.getRelative(BlockFace.DOWN).getRelative(oppositeFace);
+            Block checking = regionBlock.getRelative(oppositeFace);
+            while (checking.getType() == regionBlock.getType()) {
+                checking = checking.getRelative(oppositeFace);
+            }
+            checking = checking.getRelative(oppositeFace.getOppositeFace());
+
+            Block pos1 = null;
+            Block pos2 = null;
+            if (oppositeFace == BlockFace.NORTH || oppositeFace == BlockFace.SOUTH) {
+                pos1 = regionBlock.getRelative(BlockFace.EAST);
+                while (pos1.getType() == regionBlock.getType()) {
+                    pos1 = pos1.getRelative(BlockFace.EAST);
+                }
+                pos1 = pos1.getRelative(BlockFace.WEST);
+
+                pos2 = checking.getRelative(BlockFace.WEST);
+                while (pos2.getType() == regionBlock.getType()) {
+                    pos2 = pos2.getRelative(BlockFace.WEST);
+                }
+                pos2 = pos2.getRelative(BlockFace.EAST);
+            } else if (oppositeFace == BlockFace.EAST || oppositeFace == BlockFace.WEST) {
+                pos1 = regionBlock.getRelative(BlockFace.NORTH);
+                while (pos1.getType() == regionBlock.getType()) {
+                    pos1 = pos1.getRelative(BlockFace.NORTH);
+                }
+                pos1 = pos1.getRelative(BlockFace.SOUTH);
+
+                pos2 = checking.getRelative(BlockFace.SOUTH);
+                while (pos2.getType() == regionBlock.getType()) {
+                    pos2 = pos2.getRelative(BlockFace.SOUTH);
+                }
+                pos2 = pos2.getRelative(BlockFace.NORTH);
+            }
+
+            if (pos1 == null || pos2 == null) {
+                event.getPlayer().sendMessage("error on retrieving pos1 and pos2. aborted.");
+                return;
+            }
+
+            int minX = Math.min(pos1.getLocation().getBlockX(), pos2.getLocation().getBlockX());
+            int minZ = Math.min(pos1.getLocation().getBlockZ(), pos2.getLocation().getBlockZ());
+            int maxX = Math.max(pos1.getLocation().getBlockX(), pos2.getLocation().getBlockX());
+            int maxZ = Math.max(pos1.getLocation().getBlockZ(), pos2.getLocation().getBlockZ());
+            BlockVector3 min = BlockVector3.at(minX, 0, minZ);
+            BlockVector3 max = BlockVector3.at(maxX, 255, maxZ);
+            region = new ProtectedCuboidRegion("plot_" + sign.getLocation().getBlockX() + "_" + sign.getLocation().getBlockZ(), min, max);            
+            WorldGuard.getInstance().getPlatform().getRegionContainer().get(BukkitAdapter.adapt(sign.getWorld())).addRegion(region);
+        } else if (!region.getId().startsWith("plot_")) {
+            // NOTE: 保護領域改名イベントをキャンセルさせないようにしておく必要がある
+            ProtectedRegion temp = new ProtectedCuboidRegion("plot_" + block.getLocation().getBlockX() + "_" + block.getLocation().getBlockZ(), region.getMinimumPoint(), region.getMaximumPoint());
+            temp.copyFrom(region);
+            RegionManager rm = WorldGuard.getInstance().getPlatform().getRegionContainer().get(BukkitAdapter.adapt(block.getWorld()));
+            rm.addRegion(temp);
+            for (ProtectedRegion child : rm.getRegions().values()) {
+                if (child.getParent() != null && child.getParent().equals(region)) {
+                    try {
+                        child.setParent(temp);
+                    } catch (CircularInheritanceException willNotCause) {
+                    }
+                }
+            }
+            rm.removeRegion(region.getId());
+            region = temp;
+            */
+        }
+
+        OfflinePlayer owner = null;
+        try {
+            owner = Bukkit.getOfflinePlayer(region.getOwners().getUniqueIds().iterator().next());
+        } catch (NoSuchElementException ignored) {
+        }
+
+        if (PLOTS.getPlots().contains(region.getId())) {
+            Messages.getInstance().sendMessage(event.getPlayer(), "other.sign-is-already-registered");
+            event.setCancelled(true);
+            PLOTS.placeSign(region.getId());
+            return;
+        }
+
+        if (Utility.isWallSign(block)) {
+            block.getRelative(Utility.getSignFace(block).getOppositeFace()).setType(Material.BEDROCK);
+        } else {
+            block.getRelative(BlockFace.DOWN).setType(Material.BEDROCK);
+        }
+
+        PLOTS.addPlot(region.getId(), block.getWorld(), event.getBlock().getLocation(),
+                Utility.getSignFace(event.getBlock()), owner);
+
+        sign.setLine(1, region.getId());
+        String line2 = (owner == null) ? Messages.getInstance().getMessage("other.click-here-to-claim")
+                : Optional.ofNullable(owner.getName()).orElse("null");
+        sign.setLine(2, line2);
+        sign.setLine(3, "");
+
+        sign.update();
     }
 }
