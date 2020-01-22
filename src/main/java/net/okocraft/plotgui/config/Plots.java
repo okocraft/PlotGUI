@@ -1,5 +1,9 @@
 package net.okocraft.plotgui.config;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Instant;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -7,6 +11,7 @@ import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
@@ -438,11 +443,49 @@ public final class Plots extends CustomConfig {
 
     public void purgeInactivePlots(int threshold) {
         Set<String> inactivePlots = getInactivePlots(threshold);
+        PLUGIN.getLogger().info(inactivePlots.size() + " region" + (inactivePlots.size() > 1 ? "s" : "")
+                + " is marked as inactive." + (inactivePlots.size() > 0 ? "Then starting regeneration." : ""));
         inactivePlots.forEach(plotName -> {
-            getOwners(plotName).forEach(owner -> removeOwner(plotName, owner));
+            Set<OfflinePlayer> owners = getOwners(plotName);
+            logPurge(plotName, owners);
+            owners.forEach(owner -> removeOwner(plotName, owner));
             getMembers(plotName).forEach(owner -> removeMember(plotName, owner));
         });
-        PLUGIN.getLogger().info(inactivePlots.size() + " region" + (inactivePlots.size() > 1 ? "s" : "") + " is marked as inactive." + (inactivePlots.size() > 0 ? "Then starting regeneration." : ""));
         regenMultiRegions(inactivePlots, Bukkit.getConsoleSender());
+    }
+
+    private void logPurge(String plotName, Set<OfflinePlayer> owners) {
+        PLUGIN.getLogger().info("Owner(s) of " + plotName + ":");
+
+        StringBuilder sb = new StringBuilder();
+        String firstOwner = null;
+        for (OfflinePlayer owner : getOwners(plotName)) {
+            if (firstOwner == null) {
+                firstOwner = owner.getName();
+            }
+            sb.append("  ").append(owner.getName() == null ? owner.getUniqueId().toString() : owner.getName())
+                    .append(" (last login = ").append(Instant.ofEpochMilli(owner.getLastPlayed())).append(")\n");
+        }
+        sb.deleteCharAt(sb.length() - 1);
+        PLUGIN.getLogger().info(sb.toString());
+
+        try {
+            Path logFolder = PLUGIN.getDataFolder().toPath().resolve("plot-removal-log");
+            if (!Files.exists(logFolder) || !Files.isDirectory(logFolder)) {
+                Files.createDirectories(logFolder);
+            }
+
+            Path logFile = logFolder.resolve(plotName + "(" + firstOwner + ")" + ".log");
+            if (Files.exists(logFile)) {
+                Files.delete(logFile);
+            }
+            Files.createFile(logFile);
+
+            Files.write(logFile, sb.toString().getBytes());
+
+        } catch (IOException e) {
+            PLUGIN.getLogger().log(Level.WARNING, "Cannot make log file of plot deletion because of file I/O Error.",
+                    e);
+        }
     }
 }
