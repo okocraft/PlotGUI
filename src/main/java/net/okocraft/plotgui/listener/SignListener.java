@@ -118,20 +118,17 @@ public class SignListener implements Listener {
 
         sign.setLine(2, Messages.getInstance().getMessage("other.click-here-to-claim"));
         
-        if (PLOTS.hasPlot(player)) {
-            if (!Config.getInstance().perWorldPlots() && PLOTS.getPlots(player).stream()
-                    .anyMatch(playerPlot -> PLOTS.getWorldName(playerPlot).equals(sign.getWorld().getName()))) {
-                Messages.getInstance().sendMessage(player, "other.confirm-claim");
-                confirm.put(player, regionId);
-            } else {
-                Messages.getInstance().sendMessage(player, "other.cannot-claim-anymore");
-            }
+        if (confirm.getOrDefault(player, "").equals(regionId)) {
+            Messages.getInstance().sendMessage(player, "other.claim-success", Map.of("%region%", regionId));
+            PLOTS.addOwner(regionId, player);
+            confirm.remove(player);
+            sign.setLine(2, player.getName());
 
             sign.update();
             return;
         }
-        
-        if (confirm.getOrDefault(player, "").equals(regionId)) {
+
+        if (!PLOTS.hasPlot(player)) {
             Messages.getInstance().sendMessage(player, "other.confirm-claim");
             confirm.put(player, regionId);
 
@@ -139,10 +136,13 @@ public class SignListener implements Listener {
             return;
         }
 
-        Messages.getInstance().sendMessage(player, "other.claim-success", Map.of("%region%", regionId));
-        PLOTS.addOwner(regionId, player);
-        confirm.remove(player);
-        sign.setLine(2, player.getName());
+        if (Config.getInstance().perWorldPlots() && PLOTS.getPlots(player).stream()
+                .noneMatch(playerPlot -> PLOTS.getWorldName(playerPlot).equals(sign.getWorld().getName()))) {
+            Messages.getInstance().sendMessage(player, "other.confirm-claim");
+            confirm.put(player, regionId);
+        } else {
+            Messages.getInstance().sendMessage(player, "other.cannot-claim-anymore");
+        }
 
         sign.update();
     }
