@@ -1,3 +1,5 @@
+plots-per-world: true
+
 gui:
   open-sound: BLOCK_CHEST_OPEN
 

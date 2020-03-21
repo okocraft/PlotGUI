@@ -49,6 +49,10 @@ public final class Config extends CustomConfig {
         );
     }
 
+    public boolean perWorldPlots() {
+        return get().getBoolean("plots-per-world", true);
+    }
+
     public int getRegenCooldown() {
         return get().getInt("regen.cooldown", 600);
     }

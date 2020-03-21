@@ -27,6 +27,7 @@ import org.bukkit.inventory.EquipmentSlot;
 
 import net.okocraft.plotgui.PlotGUI;
 import net.okocraft.plotgui.Utility;
+import net.okocraft.plotgui.config.Config;
 import net.okocraft.plotgui.config.Messages;
 import net.okocraft.plotgui.config.Plots;
 import net.okocraft.plotgui.gui.GUI;
@@ -102,8 +103,12 @@ public class SignListener implements Listener {
         if (owners.isEmpty()) {
             sign.setLine(2, Messages.getInstance().getMessage("other.click-here-to-claim"));
             if (PLOTS.hasPlot(player)) {
-                Messages.getInstance().sendMessage(player, "other.cannot-claim-anymore");
-
+                if (Config.getInstance().perWorldPlots() && !PLOTS.getWorldName(plotName).equals(sign.getWorld().getName())) {
+                    Messages.getInstance().sendMessage(player, "other.confirm-claim");
+                    confirm.put(player, regionId);
+                } else {
+                    Messages.getInstance().sendMessage(player, "other.cannot-claim-anymore");
+                }
             } else if (confirm.getOrDefault(player, "").equals(regionId)) {
                 Messages.getInstance().sendMessage(player, "other.claim-success", Map.of("%region%", regionId));
                 PLOTS.addOwner(regionId, player);
@@ -306,7 +311,7 @@ public class SignListener implements Listener {
             }
             rm.removeRegion(region.getId());
             region = temp;
-            */
+             */
         }
 
         OfflinePlayer owner = null;
