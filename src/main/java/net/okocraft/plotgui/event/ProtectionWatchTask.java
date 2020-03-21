@@ -30,6 +30,9 @@ public class ProtectionWatchTask extends BukkitRunnable {
             Collection<ProtectedRegion> previousWorldRegions = previousRegions.get(world);
 
             RegionManager rm = rc.get(weWorld);
+            if (rm == null) {
+                continue;
+            }
             Map<String, ProtectedRegion> regions = rm.getRegions();
 
             if (previousWorldRegions.isEmpty()) {
