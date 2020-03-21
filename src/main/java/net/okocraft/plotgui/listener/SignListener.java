@@ -71,7 +71,7 @@ public class SignListener implements Listener {
         }
 
         Sign sign = (Sign) clicked.getState();
-        
+
         if (!Utility.isPlotGUISign(clicked)) {
             return;
         }
@@ -100,26 +100,7 @@ public class SignListener implements Listener {
         sign.setLine(1, regionId);
 
         Set<OfflinePlayer> owners = PLOTS.getOwners(regionId);
-        if (owners.isEmpty()) {
-            sign.setLine(2, Messages.getInstance().getMessage("other.click-here-to-claim"));
-            if (PLOTS.hasPlot(player)) {
-                if (Config.getInstance().perWorldPlots() && !PLOTS.getWorldName(plotName).equals(sign.getWorld().getName())) {
-                    Messages.getInstance().sendMessage(player, "other.confirm-claim");
-                    confirm.put(player, regionId);
-                } else {
-                    Messages.getInstance().sendMessage(player, "other.cannot-claim-anymore");
-                }
-            } else if (confirm.getOrDefault(player, "").equals(regionId)) {
-                Messages.getInstance().sendMessage(player, "other.claim-success", Map.of("%region%", regionId));
-                PLOTS.addOwner(regionId, player);
-                confirm.remove(player);
-                sign.setLine(2, player.getName());
-
-            } else {
-                Messages.getInstance().sendMessage(player, "other.confirm-claim");
-                confirm.put(player, regionId);
-            }
-        } else {
+        if (!owners.isEmpty()) {
             Optional<OfflinePlayer> owner = owners.stream().filter(element -> element.getName() != null).findAny();
             String ownerName = owner.map(OfflinePlayer::getName).orElse("null");
             sign.setLine(2, ownerName);
@@ -130,7 +111,38 @@ public class SignListener implements Listener {
                 Messages.getInstance().sendMessage(player, "other.here-is-other-players-region",
                         Map.of("%owner%", ownerName));
             }
+
+            sign.update();
+            return;
         }
+
+        sign.setLine(2, Messages.getInstance().getMessage("other.click-here-to-claim"));
+        
+        if (PLOTS.hasPlot(player)) {
+            if (!Config.getInstance().perWorldPlots() && PLOTS.getPlots(player).stream()
+                    .anyMatch(playerPlot -> PLOTS.getWorldName(playerPlot).equals(sign.getWorld().getName()))) {
+                Messages.getInstance().sendMessage(player, "other.confirm-claim");
+                confirm.put(player, regionId);
+            } else {
+                Messages.getInstance().sendMessage(player, "other.cannot-claim-anymore");
+            }
+
+            sign.update();
+            return;
+        }
+        
+        if (confirm.getOrDefault(player, "").equals(regionId)) {
+            Messages.getInstance().sendMessage(player, "other.confirm-claim");
+            confirm.put(player, regionId);
+
+            sign.update();
+            return;
+        }
+
+        Messages.getInstance().sendMessage(player, "other.claim-success", Map.of("%region%", regionId));
+        PLOTS.addOwner(regionId, player);
+        confirm.remove(player);
+        sign.setLine(2, player.getName());
 
         sign.update();
     }
@@ -202,7 +214,8 @@ public class SignListener implements Listener {
         }
 
         if (Utility.isWallSign(event.getBlock())) {
-            event.getBlock().getRelative(Utility.getSignFace(event.getBlock()).getOppositeFace()).setType(Material.BEDROCK);
+            event.getBlock().getRelative(Utility.getSignFace(event.getBlock()).getOppositeFace())
+                    .setType(Material.BEDROCK);
         } else {
             event.getBlock().getRelative(BlockFace.DOWN).setType(Material.BEDROCK);
         }
