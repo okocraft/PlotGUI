@@ -8,7 +8,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
@@ -224,15 +223,14 @@ public final class Plots extends CustomConfig {
                 .filter(plotName -> getSignFacing(plotName) != null).collect(Collectors.toSet());
     }
 
-    public boolean hasPlot(OfflinePlayer player) {
+    public Set<String> getPlots(OfflinePlayer player) {
         Set<String> plots = getPlots();
-        if (plots.size() > 100) {
-            return getPlots().parallelStream().flatMap(plotName -> getOwners(plotName).stream())
-                    .anyMatch(player::equals);
-        } else {
-            return getPlots().stream().flatMap(plotName -> getOwners(plotName).stream()).filter(Objects::nonNull)
-                    .anyMatch(player::equals);
-        }
+        plots.removeIf(plotName -> !getOwners(plotName).contains(player));
+        return plots;
+    }
+
+    public boolean hasPlot(OfflinePlayer player) {
+        return !getPlots(player).isEmpty();
     }
 
     public String getPlotBySignLocation(Location signLocation) {
