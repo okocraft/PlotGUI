@@ -18,16 +18,16 @@ import net.okocraft.plotgui.PlotGUI;
  *
  * @author LazyGon
  */
-public abstract class CustomConfig {
+abstract class CustomConfig {
 
-    private static final PlotGUI PLUGIN = PlotGUI.getInstance();
+    private final PlotGUI plugin = PlotGUI.getInstance();
     private final File file;
     private final String name;
     private FileConfiguration config;
 
     CustomConfig(String name) {
         this.name = name;
-        this.file = new File(PLUGIN.getDataFolder(), this.name);
+        this.file = new File(plugin.getDataFolder(), this.name);
         reload();
         if (file.isDirectory()) {
             throw new IllegalArgumentException("file must not be directory");
@@ -65,7 +65,7 @@ public abstract class CustomConfig {
     protected void reload() {
         saveDefault();
         config = YamlConfiguration.loadConfiguration(file);
-        Optional<InputStream> inputStream = Optional.ofNullable(PLUGIN.getResource(name));
+        Optional<InputStream> inputStream = Optional.ofNullable(plugin.getResource(name));
         inputStream.ifPresent(stream -> config.setDefaults(YamlConfiguration.loadConfiguration(
                 new InputStreamReader(stream, StandardCharsets.UTF_8)
         )));
@@ -78,7 +78,7 @@ public abstract class CustomConfig {
      */
     protected void saveDefault() {
         if (!file.exists()) {
-            PLUGIN.saveResource(name, false);
+            plugin.saveResource(name, false);
         }
     }
 
@@ -93,7 +93,7 @@ public abstract class CustomConfig {
         try {
             get().save(file);
         } catch (IOException e) {
-            PLUGIN.getLogger().log(Level.SEVERE, "Could not save config to " + file, e);
+            plugin.getLogger().log(Level.SEVERE, "Could not save config to " + file, e);
         }
     }
 }

@@ -19,10 +19,14 @@ import net.okocraft.plotgui.config.Messages;
 
 public class PlayersGUI implements InventoryHolder {
 
+    private final PlotGUI plugin = PlotGUI.getInstance();
+    private final Config config = plugin.getConfigManager().getConfig();
+    private final Messages messages = plugin.getConfigManager().getMessages();
+
     private final InventoryHolder previousGUI;
     private final int previousGUIClickedSlot;
     private final Inventory inventory = Bukkit.createInventory(this, 54,
-            Messages.getInstance().getMessage("gui.playerlist-title"));
+            messages.getMessage("gui.playerlist-title"));
     private final Player owner;
     private final List<OfflinePlayer> players;
     private int page;
@@ -36,7 +40,7 @@ public class PlayersGUI implements InventoryHolder {
         this.previousGUIClickedSlot = previousGUIClickedSlot;
         setPage(1);
 
-        Config.getInstance().playGUIOpenSound(player);
+        config.playGUIOpenSound(player);
     }
 
     public void setPage(int page) {
@@ -49,15 +53,15 @@ public class PlayersGUI implements InventoryHolder {
         this.page = page;
         inventory.clear();
 
-        inventory.setItem(49, Config.getInstance().getBackToMainIcon());
+        inventory.setItem(49, config.getBackToMainIcon());
 
         if (page > 1) {
-            inventory.setItem(45, Config.getInstance().getPreviousPageIcon(page - 1));
+            inventory.setItem(45, config.getPreviousPageIcon(page - 1));
         }
 
         int maxPage = players.size() % 54 == 0 ? players.size() / 54 : players.size() / 54 + 1;
         if (page + 1 <= maxPage) {
-            inventory.setItem(53, Config.getInstance().getNextPageIcon(page + 1));
+            inventory.setItem(53, config.getNextPageIcon(page + 1));
         }
 
         int fromIndex = (page - 1) * 45;
@@ -66,7 +70,7 @@ public class PlayersGUI implements InventoryHolder {
         toIndex = Math.max(toIndex, 0);
         List<OfflinePlayer> subList = players.subList(fromIndex, toIndex);
         for (int i = 0; i < subList.size(); i++) {
-            inventory.setItem(i, Config.getInstance().getPlayerHead(subList.get(i)));
+            inventory.setItem(i, config.getPlayerHead(subList.get(i)));
         }
 
         

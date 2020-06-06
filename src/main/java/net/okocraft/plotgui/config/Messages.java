@@ -7,14 +7,8 @@ import org.bukkit.command.CommandSender;
 
 public final class Messages extends CustomConfig {
     
-    private static final Messages INSTANCE = new Messages();
-    
     Messages() {
         super("messages.yml");
-    }
-
-    public static Messages getInstance() {
-        return INSTANCE;
     }
 
     /**

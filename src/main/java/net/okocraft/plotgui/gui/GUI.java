@@ -8,20 +8,20 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
+import net.okocraft.plotgui.PlotGUI;
 import net.okocraft.plotgui.config.Config;
-import net.okocraft.plotgui.config.Messages;
 
 public class GUI implements InventoryHolder {
 
     private final Player owner;
-    private final Inventory inventory = Bukkit.createInventory(this, 9, Messages.getInstance().getMessage("gui.management-title"));
+    private final Inventory inventory = Bukkit.createInventory(this, 9, PlotGUI.getInstance().getConfigManager().getMessages().getMessage("gui.management-title"));
     private final ProtectedRegion region;
     
     public GUI(Player player, ProtectedRegion region) {
         this.owner = player;
         this.region = region;
 
-        Config config = Config.getInstance();
+        Config config = PlotGUI.getInstance().getConfigManager().getConfig();
         ItemStack flame = config.getFlameIcon();
         inventory.setItem(0, config.getAddMemberIcon());
         inventory.setItem(1, flame);

@@ -7,7 +7,7 @@ import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import net.okocraft.plotgui.config.Config;
+import net.okocraft.plotgui.config.ConfigManager;
 import net.okocraft.plotgui.config.Plots;
 import net.okocraft.plotgui.event.ProtectionWatchTask;
 import net.okocraft.plotgui.listener.GUIListener;
@@ -20,20 +20,25 @@ public class PlotGUI extends JavaPlugin {
 
     private static PlotGUI instance;
 
+    private ConfigManager configManager;
+
     @Override
     public void onEnable() {
-        Config.getInstance().reloadAllConfigs();
-        SignListener.getInstance().start();
-        GUIListener.getInstance().start();
-        ProtectionListener.getInstance().start();
+        configManager = new ConfigManager();
+        configManager.reloadAllConfigs();
 
-        Plots.getInstance().purgeInactivePlots(Config.getInstance().getPlotPurgeDays());
+        new SignListener().start();
+        new GUIListener().start();
+        new ProtectionListener().start();
+
+        Plots plots = configManager.getPlots();
+        plots.purgeInactivePlots(configManager.getConfig().getPlotPurgeDays());
 
         new ProtectionWatchTask().runTaskTimerAsynchronously(this, 0L, 20L);
 
         int count = 0;
-        for (String plotName : Plots.getInstance().getPlots()) {
-            ProtectedRegion region = Plots.getInstance().getRegion(plotName);
+        for (String plotName : plots.getPlots()) {
+            ProtectedRegion region = plots.getRegion(plotName);
             if (region != null && region.getOwners().getUniqueIds().isEmpty()) {
                 count++;
             } else if (region == null) {
@@ -51,9 +56,13 @@ public class PlotGUI extends JavaPlugin {
 
     public static PlotGUI getInstance() {
         if (instance == null) {
-            instance = (PlotGUI) Bukkit.getPluginManager().getPlugin("PlotGUI");
+            instance = getPlugin(PlotGUI.class);
         }
 
         return instance;
+    }
+
+    public ConfigManager getConfigManager() {
+        return configManager;
     }
 }

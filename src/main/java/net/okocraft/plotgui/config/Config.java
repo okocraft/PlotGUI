@@ -22,16 +22,11 @@ import net.okocraft.plotgui.PlotGUI;
 public final class Config extends CustomConfig {
 
     public static final NamespacedKey headUUIDKey = new NamespacedKey(PlotGUI.getInstance(), "uuid");
-    private static final Config INSTANCE = new Config();
 
-    private Config() {
+    Config() {
         super("config.yml");
     }
 
-    public static Config getInstance() {
-        return INSTANCE;
-    }
-    
     public void playGUIOpenSound(Player player) {
         Sound openSound;
         try {
@@ -165,11 +160,5 @@ public final class Config extends CustomConfig {
     public void reload() {
         Bukkit.getOnlinePlayers().forEach(Player::closeInventory);
         super.reload();
-    }
-
-    public void reloadAllConfigs() {
-        reload();
-        Messages.getInstance().reload();
-        Plots.getInstance().reload();
     }
 }

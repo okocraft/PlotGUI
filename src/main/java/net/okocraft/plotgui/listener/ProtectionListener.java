@@ -24,19 +24,11 @@ import net.okocraft.plotgui.event.ProtectionRenameEvent;
 
 public class ProtectionListener implements Listener {
 
-    private static final PlotGUI PLUGIN = PlotGUI.getInstance();
-    private static final Plots PLOTS = Plots.getInstance();
-    private static final ProtectionListener INSTANCE = new ProtectionListener();
-
-    private ProtectionListener() {
-    }
-
-    public static ProtectionListener getInstance() {
-        return INSTANCE;
-    }
+    private final PlotGUI plugin = PlotGUI.getInstance();
+    private final Plots plots = plugin.getConfigManager().getPlots();
 
     public void start() {
-        Bukkit.getPluginManager().registerEvents(this, PLUGIN);
+        Bukkit.getPluginManager().registerEvents(this, plugin);
     }
 
     public void stop() {
@@ -51,10 +43,10 @@ public class ProtectionListener implements Listener {
     @EventHandler
     public void onProtectionAdded(ProtectionAddEvent event) {
         RegionManager rm = WorldGuard.getInstance().getPlatform().getRegionContainer().get(event.getWorld());
-        Set<ProtectedRegion> plots = PLOTS.getPlots().stream()
-                .filter(plotName -> PLOTS.getWorldName(plotName).equals(event.getWorld().getName()))
+        Set<ProtectedRegion> plotsRegions = plots.getPlots().stream()
+                .filter(plotName -> plots.getWorldName(plotName).equals(event.getWorld().getName()))
                 .map(plotName -> rm.getRegion(plotName)).filter(Objects::nonNull).collect(Collectors.toSet());
-        if (event.getRegion().getIntersectingRegions(plots).size() != 0) {
+        if (event.getRegion().getIntersectingRegions(plotsRegions).size() != 0) {
             event.setCancelled(true);
         }
     }
@@ -84,11 +76,11 @@ public class ProtectionListener implements Listener {
     }
 
     private boolean isPlot(ProtectedRegion plot, World world) {
-        if (!PLOTS.getPlots().contains(plot.getId())) {
+        if (!plots.getPlots().contains(plot.getId())) {
             return false;
         }
 
-        Location signLocation = PLOTS.getSignLocation(plot.getId());
+        Location signLocation = plots.getSignLocation(plot.getId());
         if (signLocation == null || !BukkitAdapter.adapt(signLocation.getWorld()).equals(world)) {
             return false;
         }
