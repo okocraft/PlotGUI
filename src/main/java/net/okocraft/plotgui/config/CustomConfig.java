@@ -10,8 +10,7 @@ import java.util.logging.Level;
 
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
-
-import net.okocraft.plotgui.PlotGUI;
+import org.bukkit.plugin.Plugin;
 
 /**
  * Class for manipulating yaml files.
@@ -20,12 +19,13 @@ import net.okocraft.plotgui.PlotGUI;
  */
 abstract class CustomConfig {
 
-    private final PlotGUI plugin = PlotGUI.getInstance();
+    protected final Plugin plugin;
     private final File file;
     private final String name;
     private FileConfiguration config;
 
-    CustomConfig(String name) {
+    CustomConfig(Plugin plugin, String name) {
+        this.plugin = plugin;
         this.name = name;
         this.file = new File(plugin.getDataFolder(), this.name);
         reload();
@@ -34,7 +34,8 @@ abstract class CustomConfig {
         }
     }
 
-    CustomConfig(File file) {
+    CustomConfig(Plugin plugin, File file) {
+        this.plugin = plugin;
         if (!file.isFile()) {
             throw new IllegalArgumentException("file must not be directory");
         }
@@ -62,7 +63,7 @@ abstract class CustomConfig {
      *
      * @author LazyGon
      */
-    protected void reload() {
+    public void reload() {
         saveDefault();
         config = YamlConfiguration.loadConfiguration(file);
         Optional<InputStream> inputStream = Optional.ofNullable(plugin.getResource(name));
@@ -76,7 +77,7 @@ abstract class CustomConfig {
      *
      * @author LazyGon
      */
-    protected void saveDefault() {
+    public void saveDefault() {
         if (!file.exists()) {
             plugin.saveResource(name, false);
         }
@@ -87,7 +88,7 @@ abstract class CustomConfig {
      *
      * @author LazyGon
      */
-    protected void save() {
+    public void save() {
         if (config == null)
             return;
         try {

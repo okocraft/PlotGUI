@@ -2,12 +2,12 @@ package net.okocraft.plotgui;
 
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
-import org.bukkit.Bukkit;
-import org.bukkit.event.HandlerList;
-import org.bukkit.plugin.Plugin;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import net.okocraft.plotgui.config.ConfigManager;
+import net.okocraft.plotgui.config.Config;
+import net.okocraft.plotgui.config.Messages;
 import net.okocraft.plotgui.config.Plots;
 import net.okocraft.plotgui.event.ProtectionWatchTask;
 import net.okocraft.plotgui.listener.GUIListener;
@@ -18,23 +18,27 @@ import net.okocraft.plotgui.listener.SignListener;
 
 public class PlotGUI extends JavaPlugin {
 
-    private static PlotGUI instance;
+    public final Config config;
+    public final Messages messages;
+    public final Plots plots;
 
-    private ConfigManager configManager;
+    public PlotGUI() {
+        this.config = new Config(this);
+        this.messages = new Messages(this);
+        this.plots = new Plots(this, config, messages);
+    }
 
     @Override
     public void onEnable() {
-        configManager = new ConfigManager();
-        configManager.reloadAllConfigs();
-
-        new SignListener().start();
-        new GUIListener().start();
-        new ProtectionListener().start();
-
-        Plots plots = configManager.getPlots();
-        plots.purgeInactivePlots(configManager.getConfig().getPlotPurgeDays());
+        reloadConfig();
+        plots.purgeInactivePlots(config.getPlotPurgeDays());
 
         new ProtectionWatchTask().runTaskTimerAsynchronously(this, 0L, 20L);
+
+        PluginManager pm = getServer().getPluginManager();
+        pm.registerEvents(new GUIListener(this), this);
+        pm.registerEvents(new ProtectionListener(this), this);
+        pm.registerEvents(new SignListener(this), this);
 
         int count = 0;
         for (String plotName : plots.getPlots()) {
@@ -49,20 +53,14 @@ public class PlotGUI extends JavaPlugin {
     }
 
     @Override
-    public void onDisable() {
-        HandlerList.unregisterAll((Plugin) this);
-        Bukkit.getScheduler().cancelTasks(this);
+    public FileConfiguration getConfig() throws UnsupportedOperationException {
+        throw new UnsupportedOperationException("getConfig() is disabled. get config object with plugin.config;");
     }
-
-    public static PlotGUI getInstance() {
-        if (instance == null) {
-            instance = getPlugin(PlotGUI.class);
-        }
-
-        return instance;
-    }
-
-    public ConfigManager getConfigManager() {
-        return configManager;
+    
+    @Override
+    public void reloadConfig() {
+        config.reload();
+        messages.reload();
+        plots.reload();
     }
 }

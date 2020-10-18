@@ -10,30 +10,22 @@ import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import net.okocraft.plotgui.PlotGUI;
-import net.okocraft.plotgui.config.Plots;
 import net.okocraft.plotgui.event.ProtectionAddEvent;
 import net.okocraft.plotgui.event.ProtectionRemoveEvent;
 import net.okocraft.plotgui.event.ProtectionRenameEvent;
 
+@EqualsAndHashCode
+@AllArgsConstructor
 public class ProtectionListener implements Listener {
 
-    private final PlotGUI plugin = PlotGUI.getInstance();
-    private final Plots plots = plugin.getConfigManager().getPlots();
-
-    public void start() {
-        Bukkit.getPluginManager().registerEvents(this, plugin);
-    }
-
-    public void stop() {
-        HandlerList.unregisterAll(this);
-    }
+    private final PlotGUI plugin;
 
     /**
      * 作成した保護がプロットに被っていたら作成をキャンセルするリスナー
@@ -43,8 +35,8 @@ public class ProtectionListener implements Listener {
     @EventHandler
     public void onProtectionAdded(ProtectionAddEvent event) {
         RegionManager rm = WorldGuard.getInstance().getPlatform().getRegionContainer().get(event.getWorld());
-        Set<ProtectedRegion> plotsRegions = plots.getPlots().stream()
-                .filter(plotName -> plots.getWorldName(plotName).equals(event.getWorld().getName()))
+        Set<ProtectedRegion> plotsRegions = plugin.plots.getPlots().stream()
+                .filter(plotName -> plugin.plots.getWorldName(plotName).equals(event.getWorld().getName()))
                 .map(plotName -> rm.getRegion(plotName)).filter(Objects::nonNull).collect(Collectors.toSet());
         if (event.getRegion().getIntersectingRegions(plotsRegions).size() != 0) {
             event.setCancelled(true);
@@ -76,11 +68,11 @@ public class ProtectionListener implements Listener {
     }
 
     private boolean isPlot(ProtectedRegion plot, World world) {
-        if (!plots.getPlots().contains(plot.getId())) {
+        if (!plugin.plots.getPlots().contains(plot.getId())) {
             return false;
         }
 
-        Location signLocation = plots.getSignLocation(plot.getId());
+        Location signLocation = plugin.plots.getSignLocation(plot.getId());
         if (signLocation == null || !BukkitAdapter.adapt(signLocation.getWorld()).equals(world)) {
             return false;
         }

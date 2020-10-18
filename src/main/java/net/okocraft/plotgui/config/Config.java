@@ -21,10 +21,11 @@ import net.okocraft.plotgui.PlotGUI;
 
 public final class Config extends CustomConfig {
 
-    public static final NamespacedKey headUUIDKey = new NamespacedKey(PlotGUI.getInstance(), "uuid");
+    public final NamespacedKey headUUIDKey;
 
-    Config() {
-        super("config.yml");
+    public Config(PlotGUI plugin) {
+        super(plugin, "config.yml");
+        headUUIDKey = new NamespacedKey(plugin, "uuid");
     }
 
     public void playGUIOpenSound(Player player) {
@@ -33,7 +34,7 @@ public final class Config extends CustomConfig {
             openSound = Sound.valueOf(get().getString("gui.open-sound", "BLOCK_CHEST_OPEN"));
         } catch (IllegalArgumentException e) {
             openSound = Sound.BLOCK_CHEST_OPEN;
-            PlotGUI.getInstance().getLogger().log(Level.WARNING, "The sound specified in config is invalid.", e);
+            plugin.getLogger().log(Level.WARNING, "The sound specified in config is invalid.", e);
         }
         player.playSound(
                 player.getLocation(),

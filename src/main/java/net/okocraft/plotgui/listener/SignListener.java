@@ -3,7 +3,6 @@ package net.okocraft.plotgui.listener;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -25,40 +24,22 @@ import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.inventory.EquipmentSlot;
 
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import net.okocraft.plotgui.PlotGUI;
 import net.okocraft.plotgui.Utility;
-import net.okocraft.plotgui.config.Config;
-import net.okocraft.plotgui.config.Messages;
-import net.okocraft.plotgui.config.Plots;
 import net.okocraft.plotgui.gui.GUI;
 
+@EqualsAndHashCode
+@AllArgsConstructor
 public class SignListener implements Listener {
 
-    private final PlotGUI plugin = PlotGUI.getInstance();
-    private final Config config = plugin.getConfigManager().getConfig();
-    private final Messages messages = plugin.getConfigManager().getMessages();
-    private final Plots plots = plugin.getConfigManager().getPlots();
+    private final PlotGUI plugin;
 
     private final Map<Player, String> confirm = new HashMap<>();
 
     public void start() {
         Bukkit.getPluginManager().registerEvents(this, plugin);
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (o == this)
-            return true;
-        if (!(o instanceof SignListener)) {
-            return false;
-        }
-        SignListener signListener = (SignListener) o;
-        return Objects.equals(plugin, signListener.plugin) && Objects.equals(config, signListener.config) && Objects.equals(messages, signListener.messages) && Objects.equals(plots, signListener.plots) && Objects.equals(confirm, signListener.confirm);
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(plugin, config, messages, plots, confirm);
     }
 
     @EventHandler
@@ -84,11 +65,11 @@ public class SignListener implements Listener {
 
         Player player = event.getPlayer();
 
-        String plotName = plots.getPlotBySignLocation(clicked.getLocation());
+        String plotName = plugin.plots.getPlotBySignLocation(clicked.getLocation());
         if (plotName != null && Utility.getRegion(clicked.getWorld(), plotName) == null) {
-            plots.removePlot(plotName);
+            plugin.plots.removePlot(plotName);
             clicked.breakNaturally();
-            messages.sendMessage(player, "other.no-plot-with-name", Map.of("%name%", plotName));
+            plugin.messages.sendMessage(player, "other.no-plot-with-name", Map.of("%name%", plotName));
             return;
         }
 
@@ -98,23 +79,23 @@ public class SignListener implements Listener {
         }
 
         String regionId = region.getId();
-        if (!plots.getPlots().contains(regionId)) {
-            plots.addPlot(regionId, sign.getWorld(), sign.getLocation(),
+        if (!plugin.plots.getPlots().contains(regionId)) {
+            plugin.plots.addPlot(regionId, sign.getWorld(), sign.getLocation(),
                     Utility.getSignFace(sign.getBlock()).getOppositeFace(), null);
         }
 
         sign.setLine(1, regionId);
 
-        Set<OfflinePlayer> owners = plots.getOwners(regionId);
+        Set<OfflinePlayer> owners = plugin.plots.getOwners(regionId);
         if (!owners.isEmpty()) {
             Optional<OfflinePlayer> owner = owners.stream().filter(element -> element.getName() != null).findAny();
             String ownerName = owner.map(OfflinePlayer::getName).orElse("null");
             sign.setLine(2, ownerName);
             if (owners.stream().map(OfflinePlayer::getUniqueId).anyMatch(player.getUniqueId()::equals)
                     || player.hasPermission("plotgui.mod")) {
-                player.openInventory(new GUI(player, region).getInventory());
+                player.openInventory(new GUI(plugin, player, region).getInventory());
             } else {
-                messages.sendMessage(player, "other.here-is-other-players-region",
+                plugin.messages.sendMessage(player, "other.here-is-other-players-region",
                         Map.of("%owner%", ownerName));
             }
 
@@ -122,11 +103,11 @@ public class SignListener implements Listener {
             return;
         }
 
-        sign.setLine(2, messages.getMessage("other.click-here-to-claim"));
+        sign.setLine(2, plugin.messages.getMessage("other.click-here-to-claim"));
         
         if (confirm.getOrDefault(player, "").equals(regionId)) {
-            messages.sendMessage(player, "other.claim-success", Map.of("%region%", regionId));
-            plots.addOwner(regionId, player);
+            plugin.messages.sendMessage(player, "other.claim-success", Map.of("%region%", regionId));
+            plugin.plots.addOwner(regionId, player);
             confirm.remove(player);
             sign.setLine(2, player.getName());
 
@@ -134,20 +115,20 @@ public class SignListener implements Listener {
             return;
         }
 
-        if (!plots.hasPlot(player)) {
-            messages.sendMessage(player, "other.confirm-claim");
+        if (!plugin.plots.hasPlot(player)) {
+            plugin.messages.sendMessage(player, "other.confirm-claim");
             confirm.put(player, regionId);
 
             sign.update();
             return;
         }
 
-        if (config.perWorldPlots() && plots.getPlots(player).stream()
-                .noneMatch(playerPlot -> plots.getWorldName(playerPlot).equals(sign.getWorld().getName()))) {
-            messages.sendMessage(player, "other.confirm-claim");
+        if (plugin.config.perWorldPlots() && plugin.plots.getPlots(player).stream()
+                .noneMatch(playerPlot -> plugin.plots.getWorldName(playerPlot).equals(sign.getWorld().getName()))) {
+            plugin.messages.sendMessage(player, "other.confirm-claim");
             confirm.put(player, regionId);
         } else {
-            messages.sendMessage(player, "other.cannot-claim-anymore");
+            plugin.messages.sendMessage(player, "other.cannot-claim-anymore");
         }
 
         sign.update();
@@ -176,13 +157,13 @@ public class SignListener implements Listener {
         }
 
         if (!event.getPlayer().hasPermission("plotgui.sign.remove")) {
-            messages.sendNoPermission(event.getPlayer(), "plotgui.sign.remove");
+            plugin.messages.sendNoPermission(event.getPlayer(), "plotgui.sign.remove");
             event.setCancelled(true);
             return;
         }
 
-        plots.removePlot(region.getId());
-        messages.sendMessage(event.getPlayer(), "other.remove-plot");
+        plugin.plots.removePlot(region.getId());
+        plugin.messages.sendMessage(event.getPlayer(), "other.remove-plot");
     }
 
     @EventHandler
@@ -193,7 +174,7 @@ public class SignListener implements Listener {
 
         if (!event.getPlayer().hasPermission("plotgui.sign.place")) {
             event.getBlock().breakNaturally();
-            messages.sendNoPermission(event.getPlayer(), "plotgui.sign.place");
+            plugin.messages.sendNoPermission(event.getPlayer(), "plotgui.sign.place");
             return;
         }
 
@@ -202,7 +183,7 @@ public class SignListener implements Listener {
         ProtectedRegion region = Utility.getRegionAtOrBihind(event.getBlock());
         if (region == null) {
             event.getBlock().breakNaturally();
-            messages.sendMessage(event.getPlayer(), "other.no-protection");
+            plugin.messages.sendMessage(event.getPlayer(), "other.no-protection");
             return;
         }
 
@@ -212,10 +193,10 @@ public class SignListener implements Listener {
         } catch (NoSuchElementException ignored) {
         }
 
-        if (plots.getPlots().contains(region.getId())) {
-            messages.sendMessage(event.getPlayer(), "other.sign-is-already-registered");
+        if (plugin.plots.getPlots().contains(region.getId())) {
+            plugin.messages.sendMessage(event.getPlayer(), "other.sign-is-already-registered");
             event.getBlock().breakNaturally();
-            plots.placeSign(region.getId());
+            plugin.plots.placeSign(region.getId());
             return;
         }
 
@@ -226,11 +207,11 @@ public class SignListener implements Listener {
             event.getBlock().getRelative(BlockFace.DOWN).setType(Material.BEDROCK);
         }
 
-        plots.addPlot(region.getId(), event.getBlock().getWorld(), event.getBlock().getLocation(),
+        plugin.plots.addPlot(region.getId(), event.getBlock().getWorld(), event.getBlock().getLocation(),
                 Utility.getSignFace(event.getBlock()), owner);
 
         event.setLine(1, region.getId());
-        String line2 = (owner == null) ? messages.getMessage("other.click-here-to-claim")
+        String line2 = (owner == null) ? plugin.messages.getMessage("other.click-here-to-claim")
                 : Optional.ofNullable(owner.getName()).orElse("null");
         event.setLine(2, line2);
         event.setLine(3, "");
@@ -251,7 +232,7 @@ public class SignListener implements Listener {
 
         if (!event.getPlayer().hasPermission("plotgui.sign.place")) {
             event.setCancelled(true);
-            messages.sendNoPermission(event.getPlayer(), "plotgui.sign.place");
+            plugin.messages.sendNoPermission(event.getPlayer(), "plotgui.sign.place");
             return;
         }
 
@@ -260,7 +241,7 @@ public class SignListener implements Listener {
         ProtectedRegion region = Utility.getRegionAtOrBihind(block);
         if (region == null) {
             event.setCancelled(true);
-            messages.sendMessage(event.getPlayer(), "other.no-protection");
+            plugin.messages.sendMessage(event.getPlayer(), "other.no-protection");
             return;
         }
 
@@ -270,10 +251,10 @@ public class SignListener implements Listener {
         } catch (NoSuchElementException ignored) {
         }
 
-        if (plots.getPlots().contains(region.getId())) {
-            messages.sendMessage(event.getPlayer(), "other.sign-is-already-registered");
+        if (plugin.plots.getPlots().contains(region.getId())) {
+            plugin.messages.sendMessage(event.getPlayer(), "other.sign-is-already-registered");
             event.setCancelled(true);
-            plots.placeSign(region.getId());
+            plugin.plots.placeSign(region.getId());
             return;
         }
 
@@ -283,11 +264,11 @@ public class SignListener implements Listener {
             block.getRelative(BlockFace.DOWN).setType(Material.BEDROCK);
         }
 
-        plots.addPlot(region.getId(), block.getWorld(), event.getBlock().getLocation(),
+        plugin.plots.addPlot(region.getId(), block.getWorld(), event.getBlock().getLocation(),
                 Utility.getSignFace(event.getBlock()), owner);
 
         sign.setLine(1, region.getId());
-        String line2 = (owner == null) ? messages.getMessage("other.click-here-to-claim")
+        String line2 = (owner == null) ? plugin.messages.getMessage("other.click-here-to-claim")
                 : Optional.ofNullable(owner.getName()).orElse("null");
         sign.setLine(2, line2);
         sign.setLine(3, "");

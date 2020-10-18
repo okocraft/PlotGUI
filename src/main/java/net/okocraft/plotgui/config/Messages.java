@@ -5,10 +5,12 @@ import java.util.Map;
 import org.bukkit.ChatColor;
 import org.bukkit.command.CommandSender;
 
+import net.okocraft.plotgui.PlotGUI;
+
 public final class Messages extends CustomConfig {
     
-    Messages() {
-        super("messages.yml");
+    public Messages(PlotGUI plugin) {
+        super(plugin, "messages.yml");
     }
 
     /**

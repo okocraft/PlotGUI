@@ -14,25 +14,22 @@ import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import net.okocraft.plotgui.PlotGUI;
-import net.okocraft.plotgui.config.Config;
-import net.okocraft.plotgui.config.Messages;
 
 public class PlayersGUI implements InventoryHolder {
 
-    private final PlotGUI plugin = PlotGUI.getInstance();
-    private final Config config = plugin.getConfigManager().getConfig();
-    private final Messages messages = plugin.getConfigManager().getMessages();
+    private final PlotGUI plugin;
 
     private final InventoryHolder previousGUI;
     private final int previousGUIClickedSlot;
-    private final Inventory inventory = Bukkit.createInventory(this, 54,
-            messages.getMessage("gui.playerlist-title"));
+    private final Inventory inventory;
     private final Player owner;
     private final List<OfflinePlayer> players;
     private int page;
 
-    public PlayersGUI(Player player, List<OfflinePlayer> players, InventoryHolder previous,
+    public PlayersGUI(PlotGUI plugin, Player player, List<OfflinePlayer> players, InventoryHolder previous,
             int previousGUIClickedSlot) {
+        this.plugin = plugin;
+        this.inventory = Bukkit.createInventory(this, 54, plugin.messages.getMessage("gui.playerlist-title"));
         this.owner = player;
         this.players = players;
         this.players.removeIf(Objects::isNull);
@@ -40,7 +37,7 @@ public class PlayersGUI implements InventoryHolder {
         this.previousGUIClickedSlot = previousGUIClickedSlot;
         setPage(1);
 
-        config.playGUIOpenSound(player);
+        plugin.config.playGUIOpenSound(player);
     }
 
     public void setPage(int page) {
@@ -53,15 +50,15 @@ public class PlayersGUI implements InventoryHolder {
         this.page = page;
         inventory.clear();
 
-        inventory.setItem(49, config.getBackToMainIcon());
+        inventory.setItem(49, plugin.config.getBackToMainIcon());
 
         if (page > 1) {
-            inventory.setItem(45, config.getPreviousPageIcon(page - 1));
+            inventory.setItem(45, plugin.config.getPreviousPageIcon(page - 1));
         }
 
         int maxPage = players.size() % 54 == 0 ? players.size() / 54 : players.size() / 54 + 1;
         if (page + 1 <= maxPage) {
-            inventory.setItem(53, config.getNextPageIcon(page + 1));
+            inventory.setItem(53, plugin.config.getNextPageIcon(page + 1));
         }
 
         int fromIndex = (page - 1) * 45;
@@ -70,7 +67,7 @@ public class PlayersGUI implements InventoryHolder {
         toIndex = Math.max(toIndex, 0);
         List<OfflinePlayer> subList = players.subList(fromIndex, toIndex);
         for (int i = 0; i < subList.size(); i++) {
-            inventory.setItem(i, config.getPlayerHead(subList.get(i)));
+            inventory.setItem(i, plugin.config.getPlayerHead(subList.get(i)));
         }
 
         
@@ -100,7 +97,7 @@ public class PlayersGUI implements InventoryHolder {
                 setSkullOwner(item, subList.get(loadingSlot));
                 loadingSlot++;
             }
-        }.runTaskTimer(PlotGUI.getInstance(), 0L, 2L);
+        }.runTaskTimer(plugin, 0L, 2L);
     }
 
     private void setSkullOwner(ItemStack head, OfflinePlayer player) {

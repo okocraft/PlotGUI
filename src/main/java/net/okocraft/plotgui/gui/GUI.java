@@ -9,31 +9,31 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 
 import net.okocraft.plotgui.PlotGUI;
-import net.okocraft.plotgui.config.Config;
 
 public class GUI implements InventoryHolder {
 
     private final Player owner;
-    private final Inventory inventory = Bukkit.createInventory(this, 9, PlotGUI.getInstance().getConfigManager().getMessages().getMessage("gui.management-title"));
+    private final Inventory inventory;
     private final ProtectedRegion region;
     
-    public GUI(Player player, ProtectedRegion region) {
+    public GUI(PlotGUI plugin, Player player, ProtectedRegion region) {
         this.owner = player;
         this.region = region;
+        this.inventory = Bukkit.createInventory(this, 9, plugin.messages.getMessage("gui.management-title"));
 
-        Config config = PlotGUI.getInstance().getConfigManager().getConfig();
-        ItemStack flame = config.getFlameIcon();
-        inventory.setItem(0, config.getAddMemberIcon());
+
+        ItemStack flame = plugin.config.getFlameIcon();
+        inventory.setItem(0, plugin.config.getAddMemberIcon());
         inventory.setItem(1, flame);
-        inventory.setItem(2, config.getRemoveMemberIcon());
+        inventory.setItem(2, plugin.config.getRemoveMemberIcon());
         inventory.setItem(3, flame);
-        inventory.setItem(4, config.getAddOwnerIcon());
+        inventory.setItem(4, plugin.config.getAddOwnerIcon());
         inventory.setItem(5, flame);
-        inventory.setItem(6, config.getRemoveOwnerIcon());
+        inventory.setItem(6, plugin.config.getRemoveOwnerIcon());
         inventory.setItem(7, flame);
-        inventory.setItem(8, config.getAbandonIcon());
+        inventory.setItem(8, plugin.config.getAbandonIcon());
 
-        config.playGUIOpenSound(player);
+        plugin.config.playGUIOpenSound(player);
     }
 
     /**

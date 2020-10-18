@@ -19,34 +19,23 @@ import org.bukkit.conversations.Prompt;
 import org.bukkit.conversations.ValidatingPrompt;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.HandlerList;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.persistence.PersistentDataType;
 
+import lombok.AllArgsConstructor;
+import lombok.EqualsAndHashCode;
 import net.okocraft.plotgui.PlotGUI;
-import net.okocraft.plotgui.config.Config;
-import net.okocraft.plotgui.config.Messages;
-import net.okocraft.plotgui.config.Plots;
 import net.okocraft.plotgui.gui.GUI;
 import net.okocraft.plotgui.gui.PlayersGUI;
 
+@EqualsAndHashCode
+@AllArgsConstructor
 public class GUIListener implements Listener {
     
-    private final PlotGUI plugin = PlotGUI.getInstance();
-    private final Messages messages = plugin.getConfigManager().getMessages();
-    private final Plots plots = plugin.getConfigManager().getPlots();
-
-    public void start() {
-        Bukkit.getPluginManager().registerEvents(this, plugin);
-    }
-
-    public void stop() {
-        HandlerList.unregisterAll(this);
-    }
-
+    private final PlotGUI plugin;
     
     @EventHandler
     public void onGUIClicked(InventoryClickEvent event) {
@@ -78,28 +67,28 @@ public class GUIListener implements Listener {
         case 0:
             player.closeInventory();
             List<OfflinePlayer> onlinePlayers = Bukkit.getOnlinePlayers().stream().map(p -> (OfflinePlayer) p)
-                    .filter(canditates -> !plots.getMembers(region.getId()).contains(canditates))
-                    .filter(canditates -> !plots.getOwners(region.getId()).contains(canditates))
+                    .filter(canditates -> !plugin.plots.getMembers(region.getId()).contains(canditates))
+                    .filter(canditates -> !plugin.plots.getOwners(region.getId()).contains(canditates))
                     .collect(Collectors.toList());
-            player.openInventory(new PlayersGUI(player, onlinePlayers, gui, 0).getInventory());
+            player.openInventory(new PlayersGUI(plugin, player, onlinePlayers, gui, 0).getInventory());
             break;
         case 2:
             player.closeInventory();
-            List<OfflinePlayer> members = new ArrayList<>(plots.getMembers(region.getId()));
-            player.openInventory(new PlayersGUI(player, members, gui, 2).getInventory());
+            List<OfflinePlayer> members = new ArrayList<>(plugin.plots.getMembers(region.getId()));
+            player.openInventory(new PlayersGUI(plugin, player, members, gui, 2).getInventory());
             break;
         case 4:
             player.closeInventory();
             List<OfflinePlayer> ownerCanditates = Bukkit.getOnlinePlayers().stream().map(p -> (OfflinePlayer) p)
-                    .filter(canditates -> !plots.getOwners(region.getId()).contains(canditates))
+                    .filter(canditates -> !plugin.plots.getOwners(region.getId()).contains(canditates))
                     .collect(Collectors.toList());
-            player.openInventory(new PlayersGUI(player, ownerCanditates, gui, 4).getInventory());
+            player.openInventory(new PlayersGUI(plugin, player, ownerCanditates, gui, 4).getInventory());
             break;
         case 6:
             player.closeInventory();
-            List<OfflinePlayer> owners = new ArrayList<>(plots.getOwners(region.getId()));
+            List<OfflinePlayer> owners = new ArrayList<>(plugin.plots.getOwners(region.getId()));
             owners.removeIf(p -> p.getUniqueId().equals(player.getUniqueId()));
-            player.openInventory(new PlayersGUI(player, owners, gui, 6).getInventory());
+            player.openInventory(new PlayersGUI(plugin, player, owners, gui, 6).getInventory());
             break;
         case 8:
             startRegenConversation(true, player, region);
@@ -115,9 +104,9 @@ public class GUIListener implements Listener {
         conversation.addConversationAbandonedListener(abandandedEvent -> {
             if ((boolean) abandandedEvent.getContext().getSessionData("response")) {
                 String plotName = region.getId();
-                if (plots.regen(plotName, player) && abandon) {
-                    plots.getOwners(plotName).forEach(owner -> plots.removeOwner(plotName, owner));
-                    plots.getMembers(plotName).forEach(owner -> plots.removeMember(plotName, owner));
+                if (plugin.plots.regen(plotName, player) && abandon) {
+                    plugin.plots.getOwners(plotName).forEach(owner -> plugin.plots.removeOwner(plotName, owner));
+                    plugin.plots.getMembers(plotName).forEach(owner -> plugin.plots.removeMember(plotName, owner));
                     region.getMembers().clear();
                 }
             }
@@ -127,14 +116,14 @@ public class GUIListener implements Listener {
 
     private Conversation createYesNoConversation(String messageKey, Player player) {
         return new ConversationFactory(plugin).withPrefix(
-                arg -> ChatColor.translateAlternateColorCodes('&', messages.getMessage("plugin.prefix") + " "))
+                arg -> ChatColor.translateAlternateColorCodes('&', plugin.messages.getMessage("plugin.prefix") + " "))
                 .withLocalEcho(false)
                 .withFirstPrompt(new ValidatingPrompt() {
 
                     @Override
                     public String getPromptText(ConversationContext context) {
                         return ChatColor.translateAlternateColorCodes('&',
-                                messages.getMessage(messageKey));
+                                plugin.messages.getMessage(messageKey));
                     }
 
                     @Override
@@ -194,7 +183,7 @@ public class GUIListener implements Listener {
             return;
         }
 
-        String uuid = head.getItemMeta().getPersistentDataContainer().get(Config.headUUIDKey,
+        String uuid = head.getItemMeta().getPersistentDataContainer().get(plugin.config.headUUIDKey,
                 PersistentDataType.STRING);
         OfflinePlayer selectedPlayer;
         try {
@@ -211,19 +200,19 @@ public class GUIListener implements Listener {
         // 6: remove-owner
         switch (gui.getPreviousGUIClickedSlot()) {
         case 0:
-            plots.addMember(region.getId(), selectedPlayer);
+            plugin.plots.addMember(region.getId(), selectedPlayer);
             gui.getInventory().setItem(event.getSlot(), new ItemStack(Material.AIR));
             break;
         case 2:
-            plots.removeMember(region.getId(), selectedPlayer);
+            plugin.plots.removeMember(region.getId(), selectedPlayer);
             gui.getInventory().setItem(event.getSlot(), new ItemStack(Material.AIR));
             break;
         case 4:
-            plots.addOwner(region.getId(), selectedPlayer);
+            plugin.plots.addOwner(region.getId(), selectedPlayer);
             player.closeInventory();
             break;
         case 6:
-            plots.removeOwner(region.getId(), selectedPlayer);
+            plugin.plots.removeOwner(region.getId(), selectedPlayer);
             player.closeInventory();
             break;
         }

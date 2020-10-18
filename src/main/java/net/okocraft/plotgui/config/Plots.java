@@ -41,15 +41,13 @@ import net.okocraft.plotgui.Utility;
 
 public final class Plots extends CustomConfig {
 
-    private final PlotGUI plugin = PlotGUI.getInstance();
     private final Config config;
     private final Messages messages;
 
     private final Map<String, Long> regenCooldown = new HashMap<>();
 
-    Plots(Config config, Messages messages) {
-        super("plots.yml");
-
+    public Plots(PlotGUI plugin, Config config, Messages messages) {
+        super(plugin, "plots.yml");
         this.config = config;
         this.messages = messages;
     }
