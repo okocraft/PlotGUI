@@ -34,38 +34,26 @@ import org.bukkit.block.data.Rotatable;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.HumanEntity;
+import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import net.okocraft.plotgui.PlotGUI;
-import net.okocraft.plotgui.Utility;
 
 public final class Plots extends CustomConfig {
 
-    private final Config config;
-    private final Messages messages;
+    private static final Plots INSTANCE = new Plots(JavaPlugin.getPlugin(PlotGUI.class));
+    
+    private final PlotGUI plugin;
 
     private final Map<String, Long> regenCooldown = new HashMap<>();
 
-    public Plots(PlotGUI plugin, Config config, Messages messages) {
+    private Plots(PlotGUI plugin) {
         super(plugin, "plots.yml");
-        this.config = config;
-        this.messages = messages;
+        this. plugin = plugin;
     }
 
-    public void addPlot(String plotName, World world, Location sign, BlockFace signDirection, OfflinePlayer owner) {
-        ProtectedRegion region = Utility.getRegion(world, plotName);
-        if (region == null) {
-            return;
-        }
-
-        get().set(plotName + ".world", world.getName());
-        get().set(plotName + ".sign.x", sign.getBlockX());
-        get().set(plotName + ".sign.y", sign.getBlockY());
-        get().set(plotName + ".sign.z", sign.getBlockZ());
-        get().set(plotName + ".sign.facing", signDirection.name());
-        get().set(plotName + ".is-wallsign", Utility.isWallSign(getSignLocation(plotName).getBlock()));
-
-        save();
+    public static Plots getInstance() {
+        return INSTANCE;
     }
 
     public boolean removePlot(String plotName) {
@@ -272,7 +260,7 @@ public final class Plots extends CustomConfig {
         sign.setLine(1, plotName);
         Set<OfflinePlayer> owners = getOwners(plotName);
         OfflinePlayer owner = owners.isEmpty() ? null : owners.iterator().next();
-        String line2 = owner == null ? messages.getMessage("other.click-here-to-claim")
+        String line2 = owner == null ? plugin.messages.getMessage("other.click-here-to-claim")
                 : Optional.ofNullable(owner.getName()).orElse(owner.getUniqueId().toString());
         sign.setLine(2, line2);
         sign.update();
@@ -280,10 +268,10 @@ public final class Plots extends CustomConfig {
 
     public boolean regen(String plotName, CommandSender executor) {
         long startTime = System.currentTimeMillis();
-        long cooldown = regenCooldown.getOrDefault(plotName, 0L) + 1000 * config.getRegenCooldown()
+        long cooldown = regenCooldown.getOrDefault(plotName, 0L) + 1000 * plugin.config.getRegenCooldown()
                 - startTime;
         if (cooldown > 0) {
-            messages.sendMessage(executor, "gui.regen-cooldown",
+            plugin.messages.sendMessage(executor, "gui.regen-cooldown",
                     Map.of("%cooldown%", String.valueOf(cooldown / 1000)));
             return false;
         }
@@ -361,7 +349,7 @@ public final class Plots extends CustomConfig {
                             z++;
 
                             currentLocation.setZ(z);
-                            if (blockChanges >= config.getRegenBlocksPerTickUnit()) {
+                            if (blockChanges >= plugin.config.getRegenBlocksPerTickUnit()) {
                                 return;
                             }
                         }
@@ -376,16 +364,16 @@ public final class Plots extends CustomConfig {
                     currentLocation.setX(x);
                 }
 
-                placeSign(plotName);
+                Plots.getInstance().placeSign(plotName);
 
                 cancel();
                 plugin.getLogger().info("Plot regen operation on " + plotName + " finished in "
                         + (System.currentTimeMillis() - startTime) + " ms.");
-                messages.sendMessage(executor, "gui.regen-finish",
+                plugin.messages.sendMessage(executor, "gui.regen-finish",
                         Map.of("%time%", String.valueOf((System.currentTimeMillis() - startTime) / 1000)));
                 regenMultiRegions(plotNames, executor);
             }
-        }.runTaskTimer(plugin, 0L, config.getRegenTickUnit());
+        }.runTaskTimer(plugin, 0L, plugin.config.getRegenTickUnit());
     }
 
     private void regenPosition(Location location, int floor) {
@@ -480,8 +468,7 @@ public final class Plots extends CustomConfig {
             Files.write(logFile, sb.toString().getBytes());
 
         } catch (IOException e) {
-            plugin.getLogger().log(Level.WARNING, "Cannot make log file of plot deletion because of file I/O Error.",
-                    e);
+            plugin.getLogger().log(Level.WARNING, "Cannot make log file of plot deletion because of file I/O Error.", e);
         }
     }
 }

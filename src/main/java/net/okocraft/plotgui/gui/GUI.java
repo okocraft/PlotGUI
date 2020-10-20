@@ -3,12 +3,16 @@ package net.okocraft.plotgui.gui;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 import org.bukkit.Bukkit;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
+import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
 
 import net.okocraft.plotgui.PlotGUI;
+import net.okocraft.plotgui.listener.PlayerListener;
 
 public class GUI implements InventoryHolder {
 
@@ -24,16 +28,27 @@ public class GUI implements InventoryHolder {
 
         ItemStack flame = plugin.config.getFlameIcon();
         inventory.setItem(0, plugin.config.getAddMemberIcon());
-        inventory.setItem(1, flame);
-        inventory.setItem(2, plugin.config.getRemoveMemberIcon());
-        inventory.setItem(3, flame);
-        inventory.setItem(4, plugin.config.getAddOwnerIcon());
+        inventory.setItem(1, plugin.config.getRemoveMemberIcon());
+        inventory.setItem(2, flame);
+        inventory.setItem(3, plugin.config.getAddOwnerIcon());
+        inventory.setItem(4, plugin.config.getRemoveOwnerIcon());
         inventory.setItem(5, flame);
-        inventory.setItem(6, plugin.config.getRemoveOwnerIcon());
+        ItemStack preservePlotIcon = plugin.config.getPreservePlotIcon();
+        if (PlayerListener.containsPreservationRequst(player)) {
+            makeGlow(preservePlotIcon);
+        }
+        inventory.setItem(6, preservePlotIcon);
         inventory.setItem(7, flame);
         inventory.setItem(8, plugin.config.getAbandonIcon());
 
         plugin.config.playGUIOpenSound(player);
+    }
+
+    private static void makeGlow(ItemStack item) {
+        ItemMeta meta = item.getItemMeta();
+        meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+        meta.addEnchant(Enchantment.LURE, 100, true);
+        item.setItemMeta(meta);
     }
 
     /**

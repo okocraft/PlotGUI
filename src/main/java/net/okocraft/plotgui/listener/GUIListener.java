@@ -1,14 +1,13 @@
 package net.okocraft.plotgui.listener;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
@@ -27,6 +26,7 @@ import org.bukkit.persistence.PersistentDataType;
 
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
+import net.okocraft.plotgui.Plot;
 import net.okocraft.plotgui.PlotGUI;
 import net.okocraft.plotgui.gui.GUI;
 import net.okocraft.plotgui.gui.PlayersGUI;
@@ -66,48 +66,54 @@ public class GUIListener implements Listener {
         switch (event.getSlot()) {
         case 0:
             player.closeInventory();
-            List<OfflinePlayer> onlinePlayers = Bukkit.getOnlinePlayers().stream().map(p -> (OfflinePlayer) p)
-                    .filter(canditates -> !plugin.plots.getMembers(region.getId()).contains(canditates))
-                    .filter(canditates -> !plugin.plots.getOwners(region.getId()).contains(canditates))
+            List<OfflinePlayer> onlinePlayers = plugin.getServer().getOnlinePlayers().stream().map(p -> (OfflinePlayer) p)
+                    .filter(canditates -> !region.getMembers().contains(canditates.getUniqueId()))
+                    .filter(canditates -> !region.getOwners().contains(canditates.getUniqueId()))
                     .collect(Collectors.toList());
             player.openInventory(new PlayersGUI(plugin, player, onlinePlayers, gui, 0).getInventory());
             break;
-        case 2:
+        case 1:
             player.closeInventory();
-            List<OfflinePlayer> members = new ArrayList<>(plugin.plots.getMembers(region.getId()));
+            List<OfflinePlayer> members = region.getOwners().getUniqueIds().stream().map(plugin.getServer()::getOfflinePlayer).collect(Collectors.toList());
             player.openInventory(new PlayersGUI(plugin, player, members, gui, 2).getInventory());
             break;
-        case 4:
+        case 3:
             player.closeInventory();
-            List<OfflinePlayer> ownerCanditates = Bukkit.getOnlinePlayers().stream().map(p -> (OfflinePlayer) p)
-                    .filter(canditates -> !plugin.plots.getOwners(region.getId()).contains(canditates))
+            List<OfflinePlayer> ownerCanditates = plugin.getServer().getOnlinePlayers().stream().map(p -> (OfflinePlayer) p)
+                    .filter(canditates -> !region.getOwners().contains(canditates.getUniqueId()))
                     .collect(Collectors.toList());
             player.openInventory(new PlayersGUI(plugin, player, ownerCanditates, gui, 4).getInventory());
             break;
-        case 6:
+        case 4:
             player.closeInventory();
-            List<OfflinePlayer> owners = new ArrayList<>(plugin.plots.getOwners(region.getId()));
+            List<OfflinePlayer> owners = region.getOwners().getUniqueIds().stream().map(plugin.getServer()::getOfflinePlayer).collect(Collectors.toList());
             owners.removeIf(p -> p.getUniqueId().equals(player.getUniqueId()));
             player.openInventory(new PlayersGUI(plugin, player, owners, gui, 6).getInventory());
             break;
+        case 6:
+            PlayerListener.putApplication(player);
+            player.closeInventory();
+            break;
         case 8:
-            startRegenConversation(true, player, region);
+            startAbandonConversation(player, region);
             player.closeInventory();
             break;
         }
     }
 
-    private void startRegenConversation(boolean abandon, Player player, ProtectedRegion region) {
+    private void startAbandonConversation(Player player, ProtectedRegion region) {
         player.acceptConversationInput("n");
-        Conversation conversation = createYesNoConversation(abandon ? "gui.confirm-abandon" : "gui.confirm-regen",
-                player);
+        Conversation conversation = createYesNoConversation("gui.confirm-abandon", player);
         conversation.addConversationAbandonedListener(abandandedEvent -> {
             if ((boolean) abandandedEvent.getContext().getSessionData("response")) {
-                String plotName = region.getId();
-                if (plugin.plots.regen(plotName, player) && abandon) {
-                    plugin.plots.getOwners(plotName).forEach(owner -> plugin.plots.removeOwner(plotName, owner));
-                    plugin.plots.getMembers(plotName).forEach(owner -> plugin.plots.removeMember(plotName, owner));
-                    region.getMembers().clear();
+                if (Plot.isPlot(region)) {
+                    Plot plot = Plot.load(plugin, region);
+                    if (!plot.purge(player, false)) {
+                        plugin.messages.sendMessage(player, "gui.regen-cooldown", Map.of("%cooldown%", plot.getCooldown() / 1000));
+                    }
+                    
+                } else {
+                    plugin.messages.sendMessage(player, "other.protection-is-not-plot");
                 }
             }
         });
@@ -187,7 +193,7 @@ public class GUIListener implements Listener {
                 PersistentDataType.STRING);
         OfflinePlayer selectedPlayer;
         try {
-            selectedPlayer = Bukkit.getOfflinePlayer(UUID.fromString(uuid));
+            selectedPlayer = plugin.getServer().getOfflinePlayer(UUID.fromString(uuid));
         } catch (IllegalArgumentException e) {
             plugin.getLogger().log(Level.WARNING, "Invalid uuid string is stored in skull item.", e);
             return;
@@ -200,19 +206,19 @@ public class GUIListener implements Listener {
         // 6: remove-owner
         switch (gui.getPreviousGUIClickedSlot()) {
         case 0:
-            plugin.plots.addMember(region.getId(), selectedPlayer);
+            region.getMembers().addPlayer(selectedPlayer.getUniqueId());
             gui.getInventory().setItem(event.getSlot(), new ItemStack(Material.AIR));
             break;
         case 2:
-            plugin.plots.removeMember(region.getId(), selectedPlayer);
+            region.getMembers().removePlayer(selectedPlayer.getUniqueId());
             gui.getInventory().setItem(event.getSlot(), new ItemStack(Material.AIR));
             break;
         case 4:
-            plugin.plots.addOwner(region.getId(), selectedPlayer);
+            region.getOwners().addPlayer(selectedPlayer.getUniqueId());
             player.closeInventory();
             break;
         case 6:
-            plugin.plots.removeOwner(region.getId(), selectedPlayer);
+            region.getOwners().removePlayer(selectedPlayer.getUniqueId());
             player.closeInventory();
             break;
         }

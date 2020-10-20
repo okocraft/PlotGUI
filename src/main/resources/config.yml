@@ -6,6 +6,7 @@ gui:
 regen:
   cooldown: 600
   plot-purge-days: 60
+  preserve-plot-days: 180
   blocks-per-tick-unit: 8192 # tick-unitで指定した単位tick数ごとに再生成するブロック数。
   tick-unit: 10 # blocks-per-tick-unitで指定したブロック数を、このtickごとに再生成する。 
 
@@ -30,11 +31,15 @@ icons:
     display-name: "&fオーナー削除"
     lore:
       - "&f保護オーナー削除画面に遷移します"
-  regen-plot:
-    material: BARRIER
-    display-name: "&c保護の再生成"
+  preserve-plot:
+    material: IRON_DOOR
+    display-name: "&c未ログインの保護削除を停止"
     lore:
-      - "&f地形をリセットします"
+      - "&f未ログインによる保護の削除を停止します。"
+      - "&fこのアイコンをクリックすると、次回ログアウトから%preserve-plot-days%日間は"
+      - "&fログインしなくても保護が保存されます。"
+      - "&f上の日数がたたない間にログインすると効力が切れ、保護が保存される"
+      - "&f期間が%plot-purge-days%日に戻ります。"
   abandon-plot:
     material: TNT
     display-name: "&4保護の放棄"

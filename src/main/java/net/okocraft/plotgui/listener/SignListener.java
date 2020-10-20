@@ -2,18 +2,17 @@ package net.okocraft.plotgui.listener;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.NoSuchElementException;
 import java.util.Optional;
-import java.util.Set;
+import java.util.UUID;
 
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
 import org.bukkit.block.Sign;
+import org.bukkit.block.data.type.WallSign;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -26,253 +25,187 @@ import org.bukkit.inventory.EquipmentSlot;
 
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
+import net.okocraft.plotgui.Plot;
 import net.okocraft.plotgui.PlotGUI;
-import net.okocraft.plotgui.Utility;
+import net.okocraft.plotgui.SignUtil;
 import net.okocraft.plotgui.gui.GUI;
 
 @EqualsAndHashCode
 @AllArgsConstructor
 public class SignListener implements Listener {
 
+    private static final Map<Player, String> CONFIRM = new HashMap<>();
+    
     private final PlotGUI plugin;
 
-    private final Map<Player, String> confirm = new HashMap<>();
-
-    public void start() {
-        Bukkit.getPluginManager().registerEvents(this, plugin);
-    }
-
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onSignClicked(PlayerInteractEvent event) {
-        if (event.getHand() == EquipmentSlot.OFF_HAND) {
-            return;
-        }
-
-        if (event.getAction() != Action.RIGHT_CLICK_BLOCK) {
-            return;
-        }
-
-        Block clicked = event.getClickedBlock();
-        if (clicked == null || !Utility.isSign(clicked)) {
-            return;
-        }
-
-        Sign sign = (Sign) clicked.getState();
-
-        if (!Utility.isPlotGUISign(clicked)) {
+        if (event.getHand() == EquipmentSlot.OFF_HAND || event.getAction() != Action.RIGHT_CLICK_BLOCK) {
             return;
         }
 
         Player player = event.getPlayer();
 
-        String plotName = plugin.plots.getPlotBySignLocation(clicked.getLocation());
-        if (plotName != null && Utility.getRegion(clicked.getWorld(), plotName) == null) {
-            plugin.plots.removePlot(plotName);
-            clicked.breakNaturally();
-            plugin.messages.sendMessage(player, "other.no-plot-with-name", Map.of("%name%", plotName));
+        Sign sign = SignUtil.getSignFrom(event.getClickedBlock());
+        if (sign == null || !SignUtil.isPlotGUISign(sign)) {
             return;
         }
 
-        ProtectedRegion region = Utility.getRegionAtOrBihind(clicked);
+        ProtectedRegion region = SignUtil.getRegionAtOrBehind(sign);
         if (region == null) {
+            sign.getBlock().breakNaturally();
+            plugin.messages.sendMessage(player, "other.no-protection");
             return;
         }
-
-        String regionId = region.getId();
-        if (!plugin.plots.getPlots().contains(regionId)) {
-            plugin.plots.addPlot(regionId, sign.getWorld(), sign.getLocation(),
-                    Utility.getSignFace(sign.getBlock()).getOppositeFace(), null);
+        if (!Plot.isPlot(region)) {
+            sign.getBlock().breakNaturally();
+            plugin.messages.sendMessage(player, "protection-is-not-plot");
+            return;
         }
+        Plot plot = Plot.load(plugin, region);
 
-        sign.setLine(1, regionId);
+        sign.setLine(1, region.getId());
 
-        Set<OfflinePlayer> owners = plugin.plots.getOwners(regionId);
-        if (!owners.isEmpty()) {
-            Optional<OfflinePlayer> owner = owners.stream().filter(element -> element.getName() != null).findAny();
-            String ownerName = owner.map(OfflinePlayer::getName).orElse("null");
+        UUID plotOwnerId = plot.getPlotOwnerUid();
+        if (plotOwnerId != null) {
+            OfflinePlayer owner = plugin.getServer().getOfflinePlayer(plotOwnerId);
+            String ownerName = owner.getName();
+            if (ownerName == null) {
+                plot.setPlotOwnerUid(null);
+                sign.setLine(2, plugin.messages.getMessage("other.click-here-to-claim"));
+                sign.update();
+                return;
+            }
+
             sign.setLine(2, ownerName);
-            if (owners.stream().map(OfflinePlayer::getUniqueId).anyMatch(player.getUniqueId()::equals)
-                    || player.hasPermission("plotgui.mod")) {
+
+            if (player.equals(owner) || player.hasPermission("plotgui.mod")) {
                 player.openInventory(new GUI(plugin, player, region).getInventory());
             } else {
-                plugin.messages.sendMessage(player, "other.here-is-other-players-region",
-                        Map.of("%owner%", ownerName));
+                plugin.messages.sendMessage(player, "other.here-is-other-players-region", Map.of("%owner%", ownerName));
+            }
+
+        } else {
+            sign.setLine(2, plugin.messages.getMessage("other.click-here-to-claim"));
+        
+            if (CONFIRM.getOrDefault(player, "").equals(region.getId())) {
+                plugin.messages.sendMessage(player, "other.claim-success", Map.of("%region%", region.getId()));
+                plot.setPlotOwnerUid(player.getUniqueId());
+                plot.setKeepTerm(System.currentTimeMillis() + plugin.config.getPlotPurgeDays() + 24 * 60 * 60 * 1000);
+                plot.getRegion().getOwners().addPlayer(player.getUniqueId());
+                CONFIRM.remove(player);
+                sign.setLine(2, player.getName());
+                sign.update();
+                return;
+            }
+
+            int plotCount;
+            if (plugin.config.isPerWorldPlotLimit()) {
+                plotCount = Plot.getPlots(plugin, player.getWorld(), player).size();
+            } else {
+                plotCount = (int) plugin.getServer().getWorlds().stream()
+                        .flatMap(world -> Plot.getPlots(plugin, world, player).stream()).count();
+            }
+
+            if (plotCount < plugin.config.getPlotLimit()) {
+                plugin.messages.sendMessage(player, "other.confirm-claim");
+                CONFIRM.put(player, region.getId());
+            } else {
+                plugin.messages.sendMessage(player, "other.cannot-claim-anymore");
             }
 
             sign.update();
-            return;
         }
-
-        sign.setLine(2, plugin.messages.getMessage("other.click-here-to-claim"));
-        
-        if (confirm.getOrDefault(player, "").equals(regionId)) {
-            plugin.messages.sendMessage(player, "other.claim-success", Map.of("%region%", regionId));
-            plugin.plots.addOwner(regionId, player);
-            confirm.remove(player);
-            sign.setLine(2, player.getName());
-
-            sign.update();
-            return;
-        }
-
-        if (!plugin.plots.hasPlot(player)) {
-            plugin.messages.sendMessage(player, "other.confirm-claim");
-            confirm.put(player, regionId);
-
-            sign.update();
-            return;
-        }
-
-        if (plugin.config.perWorldPlots() && plugin.plots.getPlots(player).stream()
-                .noneMatch(playerPlot -> plugin.plots.getWorldName(playerPlot).equals(sign.getWorld().getName()))) {
-            plugin.messages.sendMessage(player, "other.confirm-claim");
-            confirm.put(player, regionId);
-        } else {
-            plugin.messages.sendMessage(player, "other.cannot-claim-anymore");
-        }
-
-        sign.update();
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent event) {
-        Block block = event.getBlock();
-
+        
         // このプラグイン管理の看板の土台が壊されたかどうか。壊させない。
-        Block sign = Utility.getSignOn(block);
-        if (sign != null && Utility.isPlotGUISign(sign)) {
+        Sign base = SignUtil.getSignFrom(event.getBlock().getRelative(BlockFace.UP));
+        if (base != null && SignUtil.isPlotGUISign(base)) {
             event.setCancelled(true);
             return;
         }
 
         // このプラグイン管理の看板が壊されたかどうか
         // 壊されていたらファイルに保存してあるプロットを消す
-        if (!Utility.isSign(block) || !Utility.isPlotGUISign(block)) {
-            return;
-        }
-
-        ProtectedRegion region = Utility.getRegionAtOrBihind(block);
-        if (region == null) {
-            return;
-        }
-
-        if (!event.getPlayer().hasPermission("plotgui.sign.remove")) {
+        Sign sign = SignUtil.getSignFrom(event.getBlock());
+        if (sign != null && SignUtil.isPlotGUISign(sign)) {
+            ProtectedRegion region = SignUtil.getRegionAtOrBehind(sign);
+            if (region == null || !Plot.isPlot(region)) {
+                return;
+            }
+            
+            if (event.getPlayer().hasPermission("plotgui.sign.remove")) {
+                Plot.load(plugin, region).makeNonPlot();
+                plugin.messages.sendMessage(event.getPlayer(), "other.remove-plot");
+                return;
+            }
+            
             plugin.messages.sendNoPermission(event.getPlayer(), "plotgui.sign.remove");
             event.setCancelled(true);
             return;
         }
-
-        plugin.plots.removePlot(region.getId());
-        plugin.messages.sendMessage(event.getPlayer(), "other.remove-plot");
     }
 
-    @EventHandler
-    public void onSignChanged(SignChangeEvent event) {
-        if (!event.getLine(0).equalsIgnoreCase("[PlotGUI]")) {
-            return;
+    private boolean onPlotSignPlaced(Player whoPlaced, Block block, String[] signLines) {
+        Sign sign = SignUtil.getSignFrom(block);
+        if (sign == null) {
+            return false;
+        }
+        if (!signLines[0].equalsIgnoreCase("[PlotGUI]")) {
+            return false;
         }
 
-        if (!event.getPlayer().hasPermission("plotgui.sign.place")) {
-            event.getBlock().breakNaturally();
-            plugin.messages.sendNoPermission(event.getPlayer(), "plotgui.sign.place");
-            return;
+        if (!whoPlaced.hasPermission("plotgui.sign.place")) {
+            block.breakNaturally();
+            plugin.messages.sendNoPermission(whoPlaced, "plotgui.sign.place");
+            return false;
         }
 
-        event.setLine(0, "[PlotGUI]");
+        signLines[0] = "[PlotGUI]";
 
-        ProtectedRegion region = Utility.getRegionAtOrBihind(event.getBlock());
+        ProtectedRegion region = SignUtil.getRegionAtOrBehind(sign);
         if (region == null) {
-            event.getBlock().breakNaturally();
-            plugin.messages.sendMessage(event.getPlayer(), "other.no-protection");
-            return;
+            block.breakNaturally();
+            plugin.messages.sendMessage(whoPlaced, "other.no-protection");
+            return false;
         }
 
-        OfflinePlayer owner = null;
-        try {
-            owner = Bukkit.getOfflinePlayer(region.getOwners().getUniqueIds().iterator().next());
-        } catch (NoSuchElementException ignored) {
-        }
+        Plot plot = Plot.makePlot(plugin, region);
 
-        if (plugin.plots.getPlots().contains(region.getId())) {
-            plugin.messages.sendMessage(event.getPlayer(), "other.sign-is-already-registered");
-            event.getBlock().breakNaturally();
-            plugin.plots.placeSign(region.getId());
-            return;
-        }
+        UUID ownerUid = plot.getPlotOwnerUid();
+        OfflinePlayer owner = ownerUid != null ? plugin.getServer().getOfflinePlayer(ownerUid) : null;
 
-        if (Utility.isWallSign(event.getBlock())) {
-            event.getBlock().getRelative(Utility.getSignFace(event.getBlock()).getOppositeFace())
+        // 看板の土台を岩盤にする。
+        if (sign.getBlockData() instanceof WallSign) {
+            block.getRelative(SignUtil.getFacing(sign).getOppositeFace())
                     .setType(Material.BEDROCK);
-        } else {
-            event.getBlock().getRelative(BlockFace.DOWN).setType(Material.BEDROCK);
-        }
-
-        plugin.plots.addPlot(region.getId(), event.getBlock().getWorld(), event.getBlock().getLocation(),
-                Utility.getSignFace(event.getBlock()), owner);
-
-        event.setLine(1, region.getId());
-        String line2 = (owner == null) ? plugin.messages.getMessage("other.click-here-to-claim")
-                : Optional.ofNullable(owner.getName()).orElse("null");
-        event.setLine(2, line2);
-        event.setLine(3, "");
-    }
-
-    @EventHandler
-    public void onSignPlaced(BlockPlaceEvent event) {
-        Block block = event.getBlockPlaced();
-        if (!Utility.isSign(block)) {
-            return;
-        }
-
-        Sign sign = (Sign) block.getState();
-
-        if (!sign.getLine(0).equalsIgnoreCase("[PlotGui]")) {
-            return;
-        }
-
-        if (!event.getPlayer().hasPermission("plotgui.sign.place")) {
-            event.setCancelled(true);
-            plugin.messages.sendNoPermission(event.getPlayer(), "plotgui.sign.place");
-            return;
-        }
-
-        sign.setLine(0, "[PlotGUI]");
-
-        ProtectedRegion region = Utility.getRegionAtOrBihind(block);
-        if (region == null) {
-            event.setCancelled(true);
-            plugin.messages.sendMessage(event.getPlayer(), "other.no-protection");
-            return;
-        }
-
-        OfflinePlayer owner = null;
-        try {
-            owner = Bukkit.getOfflinePlayer(region.getOwners().getUniqueIds().iterator().next());
-        } catch (NoSuchElementException ignored) {
-        }
-
-        if (plugin.plots.getPlots().contains(region.getId())) {
-            plugin.messages.sendMessage(event.getPlayer(), "other.sign-is-already-registered");
-            event.setCancelled(true);
-            plugin.plots.placeSign(region.getId());
-            return;
-        }
-
-        if (Utility.isWallSign(block)) {
-            block.getRelative(Utility.getSignFace(block).getOppositeFace()).setType(Material.BEDROCK);
         } else {
             block.getRelative(BlockFace.DOWN).setType(Material.BEDROCK);
         }
 
-        plugin.plots.addPlot(region.getId(), block.getWorld(), event.getBlock().getLocation(),
-                Utility.getSignFace(event.getBlock()), owner);
-
-        sign.setLine(1, region.getId());
-        String line2 = (owner == null) ? plugin.messages.getMessage("other.click-here-to-claim")
+        signLines[1] = region.getId();
+        signLines[2] = (owner == null) ? plugin.messages.getMessage("other.click-here-to-claim")
                 : Optional.ofNullable(owner.getName()).orElse("null");
-        sign.setLine(2, line2);
-        sign.setLine(3, "");
+        signLines[3] = "";
+        return true;
+    }
+    
+    @EventHandler(ignoreCancelled = true)
+    public void onSignChanged(SignChangeEvent event) {
+        onPlotSignPlaced(event.getPlayer(), event.getBlock(), event.getLines());
+    
+    }
 
-        sign.update();
+    @EventHandler(ignoreCancelled = true)
+    public void onSignPlaced(BlockPlaceEvent event) {
+        Sign sign = SignUtil.getSignFrom(event.getBlock());
+        if (sign != null) {
+            if (onPlotSignPlaced(event.getPlayer(), event.getBlock(), sign.getLines())) {
+                sign.update();
+            }
+        }
     }
 }

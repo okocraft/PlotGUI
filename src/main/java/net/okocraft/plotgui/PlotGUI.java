@@ -1,7 +1,12 @@
 package net.okocraft.plotgui;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
+import org.bukkit.OfflinePlayer;
+import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -11,27 +16,28 @@ import net.okocraft.plotgui.config.Messages;
 import net.okocraft.plotgui.config.Plots;
 import net.okocraft.plotgui.event.ProtectionWatchTask;
 import net.okocraft.plotgui.listener.GUIListener;
+import net.okocraft.plotgui.listener.PlotPurgeListener;
 import net.okocraft.plotgui.listener.ProtectionListener;
 import net.okocraft.plotgui.listener.SignListener;
-
-// TODO: keep chunk on regen
 
 public class PlotGUI extends JavaPlugin {
 
     public final Config config;
     public final Messages messages;
-    public final Plots plots;
 
     public PlotGUI() {
         this.config = new Config(this);
         this.messages = new Messages(this);
-        this.plots = new Plots(this, config, messages);
     }
+
+	@Override
+	public void onLoad() {
+        PlotFlag.register();
+	}
 
     @Override
     public void onEnable() {
         reloadConfig();
-        plots.purgeInactivePlots(config.getPlotPurgeDays());
 
         new ProtectionWatchTask().runTaskTimerAsynchronously(this, 0L, 20L);
 
@@ -40,16 +46,17 @@ public class PlotGUI extends JavaPlugin {
         pm.registerEvents(new ProtectionListener(this), this);
         pm.registerEvents(new SignListener(this), this);
 
-        int count = 0;
-        for (String plotName : plots.getPlots()) {
-            ProtectedRegion region = plots.getRegion(plotName);
-            if (region != null && region.getOwners().getUniqueIds().isEmpty()) {
-                count++;
-            } else if (region == null) {
-                getLogger().warning(plotName + " is null.");
-            }
+        Set<Plot> inactivePlots = new HashSet<>();
+        for (World world : getServer().getWorlds()) {
+            Set<Plot> plots = Plot.getPlots(this, world);
+            plots.removeIf(p -> !p.isInactive(config.getPlotPurgeDays(), false) || System.currentTimeMillis() < p.getKeepTerm());
+            inactivePlots.addAll(plots);
         }
-        getLogger().info("Plots without owners: " + count);
+
+        if (!inactivePlots.isEmpty()) {
+            getLogger().info("Purging " + inactivePlots.size() + " inactive plots.");
+        }
+        pm.registerEvents(new PlotPurgeListener(this, inactivePlots), this);
     }
 
     @Override
@@ -61,6 +68,26 @@ public class PlotGUI extends JavaPlugin {
     public void reloadConfig() {
         config.reload();
         messages.reload();
-        plots.reload();
+    }
+
+    private void migrate() {
+        Plots plots = Plots.getInstance();
+
+        for (String oldSystemPlotName : plots.getPlots()) {
+            ProtectedRegion region = plots.getRegion(oldSystemPlotName);
+            int regenHeight = plots.getSignLocation(oldSystemPlotName).getBlockY() - 1;
+            Set<OfflinePlayer> owners = plots.getOwners(oldSystemPlotName);
+            OfflinePlayer mostActive = owners.isEmpty() ? null : owners.stream().max((p1, p2) -> (int) (p1.getLastPlayed() - p2.getLastPlayed())).get();
+            
+            Plot plot = Plot.makePlot(this, region);
+            plot.setRegenHeight(regenHeight);
+            if (mostActive != null) {
+                plot.setPlotOwnerUid(mostActive.getUniqueId());
+                plot.setKeepTerm(mostActive.getLastPlayed() + config.getPlotPurgeDays() * 24 * 60 * 60 * 1000);
+            }
+
+            
+        }
+
     }
 }

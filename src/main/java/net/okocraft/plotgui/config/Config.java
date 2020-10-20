@@ -45,8 +45,12 @@ public final class Config extends CustomConfig {
         );
     }
 
-    public boolean perWorldPlots() {
-        return get().getBoolean("plots-per-world", true);
+    public int getPlotLimit() {
+        return get().getInt("plot-limit", 1);
+    }
+
+    public boolean isPerWorldPlotLimit() {
+        return get().getBoolean("plots-per-world-limit", true);
     }
 
     public int getRegenCooldown() {
@@ -55,6 +59,10 @@ public final class Config extends CustomConfig {
     
     public int getPlotPurgeDays() {
         return get().getInt("regen.plot-purge-days", 60);
+    }
+    
+    public int getPreservePlotDays() {
+        return get().getInt("regen.preserve-plot-days", 180);
     }
 
     public int getRegenBlocksPerTickUnit() {
@@ -79,14 +87,17 @@ public final class Config extends CustomConfig {
 
     public ItemStack getRemoveOwnerIcon() {
         return getIcon("remove-owner", Map.of());
+    }    
+
+    public ItemStack getPreservePlotIcon() {
+        return getIcon("preserve-plot", Map.of(
+            "%preserve-plot-days%", String.valueOf(getPreservePlotDays()),
+            "%plot-purge-days%", String.valueOf(getPlotPurgeDays()))
+        );
     }
     
     public ItemStack getAbandonIcon() {
         return getIcon("abandon-plot", Map.of());
-    }
-
-    public ItemStack getRegenIcon() {
-        return getIcon("regen-plot", Map.of());
     }
 
     public ItemStack getFlameIcon() {

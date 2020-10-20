@@ -1,21 +1,16 @@
 package net.okocraft.plotgui.listener;
 
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import com.sk89q.worldedit.bukkit.BukkitAdapter;
-import com.sk89q.worldedit.world.World;
-import com.sk89q.worldguard.WorldGuard;
-import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
-import org.bukkit.Location;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
+import net.okocraft.plotgui.Plot;
 import net.okocraft.plotgui.PlotGUI;
 import net.okocraft.plotgui.event.ProtectionAddEvent;
 import net.okocraft.plotgui.event.ProtectionRemoveEvent;
@@ -34,10 +29,8 @@ public class ProtectionListener implements Listener {
      */
     @EventHandler
     public void onProtectionAdded(ProtectionAddEvent event) {
-        RegionManager rm = WorldGuard.getInstance().getPlatform().getRegionContainer().get(event.getWorld());
-        Set<ProtectedRegion> plotsRegions = plugin.plots.getPlots().stream()
-                .filter(plotName -> plugin.plots.getWorldName(plotName).equals(event.getWorld().getName()))
-                .map(plotName -> rm.getRegion(plotName)).filter(Objects::nonNull).collect(Collectors.toSet());
+        Set<ProtectedRegion> plotsRegions = Plot.getPlots(plugin, plugin.getServer().getWorld(event.getWorld().getName()))
+                .stream().map(plot -> plot.getRegion()).collect(Collectors.toSet());
         if (event.getRegion().getIntersectingRegions(plotsRegions).size() != 0) {
             event.setCancelled(true);
         }
@@ -50,7 +43,7 @@ public class ProtectionListener implements Listener {
      */
     @EventHandler
     public void onProtectionRemoved(ProtectionRemoveEvent event) {
-        if (isPlot(event.getRegion(), event.getWorld())) {
+        if (Plot.isPlot(event.getRegion())) {
             event.setCancelled(true);
         }
     }
@@ -62,21 +55,8 @@ public class ProtectionListener implements Listener {
      */
     @EventHandler
     public void onProtectionRenamed(ProtectionRenameEvent event) {
-        if (isPlot(event.getFromRegion(), event.getWorld())) {
+        if (Plot.isPlot(event.getFromRegion())) {
             event.setCancelled(true);
         }
-    }
-
-    private boolean isPlot(ProtectedRegion plot, World world) {
-        if (!plugin.plots.getPlots().contains(plot.getId())) {
-            return false;
-        }
-
-        Location signLocation = plugin.plots.getSignLocation(plot.getId());
-        if (signLocation == null || !BukkitAdapter.adapt(signLocation.getWorld()).equals(world)) {
-            return false;
-        }
-
-        return true;
     }
 }
