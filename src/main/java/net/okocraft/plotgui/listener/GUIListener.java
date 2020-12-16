@@ -1,7 +1,6 @@
 package net.okocraft.plotgui.listener;
 
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -28,6 +27,7 @@ import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import net.okocraft.plotgui.Plot;
 import net.okocraft.plotgui.PlotGUI;
+import net.okocraft.plotgui.config.Messages;
 import net.okocraft.plotgui.gui.GUI;
 import net.okocraft.plotgui.gui.PlayersGUI;
 
@@ -109,7 +109,7 @@ public class GUIListener implements Listener {
                 if (Plot.isPlot(region)) {
                     Plot plot = Plot.load(plugin, region);
                     if (!plot.purge(player, false)) {
-                        plugin.messages.sendMessage(player, "gui.regen-cooldown", Map.of("%cooldown%", plot.getCooldown() / 1000));
+                        plugin.messages.sendMessage(player, "gui.regen-cooldown", Messages.mapOf("%cooldown%", String.valueOf(plot.getCooldown() / 1000)));
                     }
                     
                 } else {

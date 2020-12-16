@@ -28,6 +28,7 @@ import lombok.EqualsAndHashCode;
 import net.okocraft.plotgui.Plot;
 import net.okocraft.plotgui.PlotGUI;
 import net.okocraft.plotgui.SignUtil;
+import net.okocraft.plotgui.config.Messages;
 import net.okocraft.plotgui.gui.GUI;
 
 @EqualsAndHashCode
@@ -82,14 +83,14 @@ public class SignListener implements Listener {
             if (player.equals(owner) || player.hasPermission("plotgui.mod")) {
                 player.openInventory(new GUI(plugin, player, region).getInventory());
             } else {
-                plugin.messages.sendMessage(player, "other.here-is-other-players-region", Map.of("%owner%", ownerName));
+                plugin.messages.sendMessage(player, "other.here-is-other-players-region", Messages.mapOf("%owner%", ownerName));
             }
 
         } else {
             sign.setLine(2, plugin.messages.getMessage("other.click-here-to-claim"));
         
             if (CONFIRM.getOrDefault(player, "").equals(region.getId())) {
-                plugin.messages.sendMessage(player, "other.claim-success", Map.of("%region%", region.getId()));
+                plugin.messages.sendMessage(player, "other.claim-success", Messages.mapOf("%region%", region.getId()));
                 plot.setPlotOwnerUid(player.getUniqueId());
                 plot.setKeepTerm(System.currentTimeMillis() + plugin.config.getPlotPurgeDays() + 24 * 60 * 60 * 1000);
                 plot.getRegion().getOwners().addPlayer(player.getUniqueId());

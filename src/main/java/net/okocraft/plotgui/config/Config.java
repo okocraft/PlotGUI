@@ -74,51 +74,51 @@ public final class Config extends CustomConfig {
     }
 
     public ItemStack getAddMemberIcon() {
-        return getIcon("add-member", Map.of());
+        return getIcon("add-member", Messages.mapOf());
     }
 
     public ItemStack getRemoveMemberIcon() {
-        return getIcon("remove-member", Map.of());
+        return getIcon("remove-member", Messages.mapOf());
     }
 
     public ItemStack getAddOwnerIcon() {
-        return getIcon("add-owner", Map.of());
+        return getIcon("add-owner", Messages.mapOf());
     }
 
     public ItemStack getRemoveOwnerIcon() {
-        return getIcon("remove-owner", Map.of());
+        return getIcon("remove-owner", Messages.mapOf());
     }    
 
     public ItemStack getPreservePlotIcon() {
-        return getIcon("preserve-plot", Map.of(
+        return getIcon("preserve-plot", Messages.mapOf(
             "%preserve-plot-days%", String.valueOf(getPreservePlotDays()),
             "%plot-purge-days%", String.valueOf(getPlotPurgeDays()))
         );
     }
     
     public ItemStack getAbandonIcon() {
-        return getIcon("abandon-plot", Map.of());
+        return getIcon("abandon-plot", Messages.mapOf());
     }
 
     public ItemStack getFlameIcon() {
-        return getIcon("flame", Map.of());
+        return getIcon("flame", Messages.mapOf());
     }
 
     public ItemStack getPlayerHead(OfflinePlayer player) {
         String uuid = player.getUniqueId().toString();
-        return getIcon("player-head", Map.of("%name%", Optional.ofNullable(player.getName()).orElse(uuid), "%uuid%", uuid));
+        return getIcon("player-head", Messages.mapOf("%name%", Optional.ofNullable(player.getName()).orElse(uuid), "%uuid%", uuid));
     }
 
     public ItemStack getPreviousPageIcon(int previousPage) {
-        return getIcon("previous-page", Map.of("%page%", String.valueOf(previousPage)));
+        return getIcon("previous-page", Messages.mapOf("%page%", String.valueOf(previousPage)));
     }
 
     public ItemStack getNextPageIcon(int nextPage) {
-        return getIcon("next-page", Map.of("%page%", String.valueOf(nextPage)));
+        return getIcon("next-page", Messages.mapOf("%page%", String.valueOf(nextPage)));
     }
 
     public ItemStack getBackToMainIcon() {
-        return getIcon("back-to-main", Map.of());
+        return getIcon("back-to-main", Messages.mapOf());
     }
 
     private ItemStack getIcon(String iconKey, Map<String, String> placeholder) {

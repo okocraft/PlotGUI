@@ -109,7 +109,7 @@ public final class Plots extends CustomConfig {
     public Set<OfflinePlayer> getOwners(String plotName) {
         ProtectedRegion region = getRegion(plotName);
         if (region == null) {
-            return Set.of();
+            return new HashSet<>();
         }
 
         return region.getOwners().getUniqueIds().stream().map(Bukkit::getOfflinePlayer).collect(Collectors.toSet());
@@ -151,7 +151,7 @@ public final class Plots extends CustomConfig {
     public Set<OfflinePlayer> getMembers(String plotName) {
         ProtectedRegion region = getRegion(plotName);
         if (region == null) {
-            return Set.of();
+            return new HashSet<>();
         }
 
         return region.getMembers().getUniqueIds().stream().map(Bukkit::getOfflinePlayer).collect(Collectors.toSet());
@@ -272,7 +272,7 @@ public final class Plots extends CustomConfig {
                 - startTime;
         if (cooldown > 0) {
             plugin.messages.sendMessage(executor, "gui.regen-cooldown",
-                    Map.of("%cooldown%", String.valueOf(cooldown / 1000)));
+                    Messages.mapOf("%cooldown%", String.valueOf(cooldown / 1000)));
             return false;
         }
         regenCooldown.put(plotName, startTime);
@@ -370,7 +370,7 @@ public final class Plots extends CustomConfig {
                 plugin.getLogger().info("Plot regen operation on " + plotName + " finished in "
                         + (System.currentTimeMillis() - startTime) + " ms.");
                 plugin.messages.sendMessage(executor, "gui.regen-finish",
-                        Map.of("%time%", String.valueOf((System.currentTimeMillis() - startTime) / 1000)));
+                        Messages.mapOf("%time%", String.valueOf((System.currentTimeMillis() - startTime) / 1000)));
                 regenMultiRegions(plotNames, executor);
             }
         }.runTaskTimer(plugin, 0L, plugin.config.getRegenTickUnit());

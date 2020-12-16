@@ -5,8 +5,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
@@ -33,6 +31,7 @@ import org.bukkit.entity.HumanEntity;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import lombok.Getter;
+import net.okocraft.plotgui.config.Messages;
 import net.okocraft.plotgui.event.PlotRegenCompleteEvent;
 
 public class Plot {
@@ -41,8 +40,10 @@ public class Plot {
 
     @Getter
     private ProtectedRegion region;
-
+    
     private final YamlConfiguration serializer = new YamlConfiguration();
+    
+    private long previousRegenTime = 0;
 
     private void checkPlotFlag() throws IllegalStateException {
         if (!isPlot(region)) {
@@ -66,7 +67,8 @@ public class Plot {
         checkPlotFlag();
 
         try {
-            serializer.loadFromString(Objects.requireNonNullElse(region.getFlag(PlotFlag.get()), ""));
+            String flagValue = region.getFlag(PlotFlag.get());
+            serializer.loadFromString(flagValue != null ? flagValue : "");
         } catch (InvalidConfigurationException e) {
             try {
                 serializer.loadFromString("");
@@ -92,7 +94,8 @@ public class Plot {
         checkPlotFlag();
 
         try {
-            serializer.loadFromString(Objects.requireNonNullElse(region.getFlag(PlotFlag.get()), ""));
+            String flagValue = region.getFlag(PlotFlag.get());
+            serializer.loadFromString(flagValue != null ? flagValue : "");
             serializer.set(dataPath, value);
             region.setFlag(PlotFlag.get(), serializer.saveToString());
         } catch (InvalidConfigurationException e) {
@@ -153,15 +156,14 @@ public class Plot {
         return heightSum / (precision * precision);
     }
 
-    private long previousRegen = 0;
     public long getCooldown() {
         checkPlotFlag();
-        return previousRegen + 1000 * plugin.config.getRegenCooldown() - System.currentTimeMillis();
+        return this.previousRegenTime + 1000 * plugin.config.getRegenCooldown() - System.currentTimeMillis();
     }
 
     public void regen(CommandSender executor, UUID oldOwner) throws IllegalStateException {
         checkPlotFlag();
-        long startTime = previousRegen = System.currentTimeMillis();
+        long startTime = this.previousRegenTime = System.currentTimeMillis();
 
         Plot plotInstance = this;
         new BukkitRunnable(){
@@ -289,7 +291,7 @@ public class Plot {
         long cooldown = getCooldown();
         if (!ignoreCooldown && cooldown > 0) {
             plugin.messages.sendMessage(executor, "gui.regen-cooldown",
-                    Map.of("%cooldown%", String.valueOf(cooldown / 1000)));
+                    Messages.mapOf("%cooldown%", String.valueOf(cooldown / 1000)));
             return false;
         }
         
@@ -314,7 +316,8 @@ public class Plot {
             UUID ownerUid = getPlotOwnerUid();
             if (ownerUid != null) {
                 owner = plugin.getServer().getOfflinePlayer(ownerUid);
-                plugin.getLogger().info("Plot owner: " + Objects.requireNonNullElse(owner.getName(), ownerUid.toString()));
+                String ownerName = owner.getName() != null ? owner.getName() : ownerUid.toString();
+                plugin.getLogger().info("Plot owner: " + ownerName);
             }
         } catch (IllegalArgumentException ignored) {
         }
@@ -325,8 +328,9 @@ public class Plot {
         if (!protectionOwners.isEmpty()) {
             for (UUID regionOwnerUid : region.getOwners().getUniqueIds()) {
                 OfflinePlayer protectionOwner = plugin.getServer().getOfflinePlayer(regionOwnerUid);
-                sb.append("  ").append(Objects.requireNonNullElse(protectionOwner.getName(), protectionOwner.getUniqueId().toString()))
-                        .append(" (last login = ").append(Instant.ofEpochMilli(protectionOwner.getLastPlayed())).append(")\n");
+                String ownerName = protectionOwner.getName() != null ? protectionOwner.getName() : protectionOwner.getUniqueId().toString();
+                sb.append("  ").append(ownerName).append(" (last login = ")
+                        .append(Instant.ofEpochMilli(protectionOwner.getLastPlayed())).append(")\n");
             }
             sb.deleteCharAt(sb.length() - 1);
             plugin.getLogger().info(() -> sb.toString());

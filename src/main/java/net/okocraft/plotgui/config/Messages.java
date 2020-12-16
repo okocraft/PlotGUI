@@ -1,5 +1,8 @@
 package net.okocraft.plotgui.config;
 
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
 
 import org.bukkit.ChatColor;
@@ -13,6 +16,26 @@ public final class Messages extends CustomConfig {
         super(plugin, "messages.yml");
     }
 
+    public static Map<String, String> mapOf(String ... placeholders) {
+        Map<String, String> result = new HashMap<>();
+        Iterator<String> it = Arrays.asList(placeholders).iterator();
+        String key;
+        String value;
+        while (true) {
+            if (it.hasNext()) {
+                key = it.next();
+                if (it.hasNext()) {
+                    value = it.next();
+                    result.put(key, value);
+                } else {
+                    return result;
+                }
+            } else {
+                return result;
+            }
+        }
+    }
+
     /**
      * Send message to player.
      * 
@@ -21,11 +44,11 @@ public final class Messages extends CustomConfig {
      * @param path
      * @param placeholders
      */
-    public void sendMessage(CommandSender sender, boolean addPrefix, String path, Map<String, Object> placeholders) {
+    public void sendMessage(CommandSender sender, boolean addPrefix, String path, Map<String, String> placeholders) {
         String prefix = addPrefix ? get().getString("plugin.prefix", "&8[&6PlotGUI&8]&r") + " " : "";
         String message = prefix + getMessage(path);
-        for (Map.Entry<String, Object> placeholder : placeholders.entrySet()) {
-            message = message.replace(placeholder.getKey(), placeholder.getValue().toString());
+        for (Map.Entry<String, String> placeholder : placeholders.entrySet()) {
+            message = message.replace(placeholder.getKey(), placeholder.getValue());
         }
         sender.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
         return;
@@ -38,7 +61,7 @@ public final class Messages extends CustomConfig {
      * @param path
      * @param placeholders
      */
-    public void sendMessage(CommandSender sender, String path, Map<String, Object> placeholders) {
+    public void sendMessage(CommandSender sender, String path, Map<String, String> placeholders) {
         sendMessage(sender, true, path, placeholders);
     }
 
@@ -49,7 +72,7 @@ public final class Messages extends CustomConfig {
      * @param path
      */
     public void sendMessage(CommandSender sender, String path) {
-        sendMessage(sender, path, Map.of());
+        sendMessage(sender, path, Messages.mapOf());
     }
 
     /**
@@ -60,7 +83,7 @@ public final class Messages extends CustomConfig {
      * @param path
      */
     public void sendMessage(CommandSender sender, boolean addPrefix, String path) {
-        sendMessage(sender, addPrefix, path, Map.of());
+        sendMessage(sender, addPrefix, path, Messages.mapOf());
     }
 
     /**
@@ -74,11 +97,11 @@ public final class Messages extends CustomConfig {
     }
 
     public void sendInvalidArgument(CommandSender sender, String invalid) {
-        sendMessage(sender, "command.general.error.invalid-argument", Map.of("%argument%", invalid));
+        sendMessage(sender, "command.general.error.invalid-argument", Messages.mapOf("%argument%", invalid));
     }
 
     public void sendNoPermission(CommandSender sender, String permission) {
-        sendMessage(sender, "command.general.error.no-permission", Map.of("%permission%", permission));
+        sendMessage(sender, "command.general.error.no-permission", Messages.mapOf("%permission%", permission));
     }
 
     public void sendConsoleSenderCannotUse(CommandSender sender) {
@@ -94,14 +117,14 @@ public final class Messages extends CustomConfig {
     }
 
     public void sendInvalidNumber(CommandSender sender, String number) {
-        sendMessage(sender, "command.general.error.invalid-number", Map.of("%number%", number));
+        sendMessage(sender, "command.general.error.invalid-number", Messages.mapOf("%number%", number));
     }
 
     public void sendUsage(CommandSender sender, String usage) {
-        sendMessage(sender, "command.general.info.usage", Map.of("%usage%", usage));
+        sendMessage(sender, "command.general.info.usage", Messages.mapOf("%usage%", usage));
     }
 
     public void sendNoPlayerFound(CommandSender sender, String player) {
-        sendMessage(sender, "command.general.error.no-player-found", Map.of("%player%", player));
+        sendMessage(sender, "command.general.error.no-player-found", Messages.mapOf("%player%", player));
     }
 }

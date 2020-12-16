@@ -1,6 +1,5 @@
 package net.okocraft.plotgui.listener;
 
-import java.util.Map;
 import java.util.Set;
 
 import org.bukkit.event.EventHandler;
@@ -9,6 +8,7 @@ import org.bukkit.event.Listener;
 import lombok.EqualsAndHashCode;
 import net.okocraft.plotgui.Plot;
 import net.okocraft.plotgui.PlotGUI;
+import net.okocraft.plotgui.config.Messages;
 import net.okocraft.plotgui.event.PlotRegenCompleteEvent;
 
 @EqualsAndHashCode
@@ -47,7 +47,7 @@ public class PlotPurgeListener implements Listener {
             plot.purge(event.getExecutor(), true);
         } else {
             plugin.messages.sendMessage(event.getExecutor(), "gui.regen-finish",
-                    Map.of("%time%", String.valueOf(((double) event.getElapsedTime()) / 1000D))
+                    Messages.mapOf("%time%", String.valueOf(((double) event.getElapsedTime()) / 1000D))
             );
         }
     }
