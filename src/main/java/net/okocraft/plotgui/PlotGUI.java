@@ -75,6 +75,10 @@ public class PlotGUI extends JavaPlugin {
 
         for (String oldSystemPlotName : plots.getPlots()) {
             ProtectedRegion region = plots.getRegion(oldSystemPlotName);
+            if (region == null) {
+                System.out.println("there is not plot named " + oldSystemPlotName);
+                continue;
+            }
             int regenHeight = plots.getSignLocation(oldSystemPlotName).getBlockY() - 1;
             Set<OfflinePlayer> owners = plots.getOwners(oldSystemPlotName);
             OfflinePlayer mostActive = owners.isEmpty() ? null : owners.stream().max((p1, p2) -> (int) (p1.getLastPlayed() - p2.getLastPlayed())).get();
