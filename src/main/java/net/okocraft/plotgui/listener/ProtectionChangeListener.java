@@ -57,37 +57,120 @@ public class ProtectionChangeListener implements Listener {
         "move"
     ));
 
+    private static final Set<String> COMMAND_FLAG = new HashSet<>(Arrays.asList(
+        "flag",
+        "f"
+    ));
+
     private final PlotGUI plugin;
 
     @EventHandler
     public void onWorldGuardCommand(PlayerCommandPreprocessEvent event) {
         List<String> args = new ArrayList<>(Arrays.asList(event.getMessage().split(" ", -1)));
-        String command = args.get(0).toLowerCase(Locale.ROOT);
-        String subCommand = args.get(1).toLowerCase(Locale.ROOT);
-        if (command.isEmpty() || !REGION_COMMANDS.contains(command)
-                || (!COMMAND_REDEFINE.contains(subCommand) && !COMMAND_REMOVE.contains(subCommand))) {
+        if (!REGION_COMMANDS.contains(args.get(0).toLowerCase(Locale.ROOT))) {
             return;
         }
 
+        String subCommand = args.get(1).toLowerCase(Locale.ROOT);
+        if (COMMAND_REDEFINE.contains(subCommand)) {
+            handleRedefineCommand(args, event);
+        } else if (COMMAND_REMOVE.contains(subCommand)) {
+            handleRemoveCommand(args, event);
+        } else if (COMMAND_FLAG.contains(subCommand)) {
+            handleFlagCommand(args, event);
+        }
+    }
+
+    public void handleRedefineCommand(List<String> args, PlayerCommandPreprocessEvent event) {
+        args.remove("-g");
         World world;
-        String id;
-        int worldIndex = command.indexOf("-w") + 1;
-        if (worldIndex != 0) {
-            if (args.size() - 1 < worldIndex) {
-                // 保護名がコマンドに含まれていない。
+        int worldIndex = args.indexOf("-w");
+        if (worldIndex != -1) {
+            if (args.size() - 1 <= worldIndex) {
                 return;
             }
-            world = Bukkit.getWorld(args.get(worldIndex));
+            world = Bukkit.getWorld(args.get(worldIndex + 1));
             if (world == null) {
                 return;
             }
-            id = args.get(worldIndex + 1);
-
+            args.remove(worldIndex);
+            args.remove(worldIndex + 1);
         } else {
             world = event.getPlayer().getWorld();
-            id = args.get(args.size() - 1);
         }
 
+        if (args.size() != 3) {
+            return;
+        }
+
+        String id = args.get(2);
+        ProtectedRegion region = WorldGuard.getInstance().getPlatform().getRegionContainer()
+                .get(BukkitAdapter.adapt(world)).getRegion(id);
+        if (region != null && Plot.isPlot(region)) {
+            plugin.messages.sendMessage(event.getPlayer(), "command.general.error.cannot-remove-or-redefine-plot");
+            event.setCancelled(true);
+        }
+    }
+
+    public void handleFlagCommand(List<String> args, PlayerCommandPreprocessEvent event) {
+        args.remove("-e");
+        args.remove("-eh");
+        World world;
+        int worldArg = args.indexOf("-w");
+        if (worldArg != -1) {
+            if (args.size() - 1 < worldArg + 1) {
+                return;
+            }
+            world = Bukkit.getWorld(args.get(worldArg + 1));
+            if (world == null) {
+                return;
+            }
+            args.remove(worldArg);
+            args.remove(worldArg + 1);
+        } else {
+            world = event.getPlayer().getWorld();
+        }
+        
+        
+        int groupArg = args.indexOf("-g");
+        if (groupArg != -1) {
+            if (args.size() - 1 < groupArg + 1) {
+                return;
+            }
+            args.remove(groupArg);
+            args.remove(groupArg + 1);
+        }
+        
+        if ((args.size() == 4 || args.size() == 5) && args.get(3).equalsIgnoreCase("plotdata")) {
+            plugin.messages.sendMessage(event.getPlayer(), "command.general.error.cannot-remove-or-redefine-plot");
+            event.setCancelled(true);
+        }
+    }
+    
+    public void handleRemoveCommand(List<String> args, PlayerCommandPreprocessEvent event) {        
+        args.remove("-f");
+        args.remove("-u");
+        World world;
+        int worldIndex = args.indexOf("-w");
+        if (worldIndex != -1) {
+            if (args.size() - 1 <= worldIndex) {
+                return;
+            }
+            world = Bukkit.getWorld(args.get(worldIndex + 1));
+            if (world == null) {
+                return;
+            }
+            args.remove(worldIndex);
+            args.remove(worldIndex + 1);
+        } else {
+            world = event.getPlayer().getWorld();
+        }
+    
+        if (args.size() != 3) {
+            return;
+        }
+    
+        String id = args.get(2);
         ProtectedRegion region = WorldGuard.getInstance().getPlatform().getRegionContainer()
                 .get(BukkitAdapter.adapt(world)).getRegion(id);
         if (region != null && Plot.isPlot(region)) {
