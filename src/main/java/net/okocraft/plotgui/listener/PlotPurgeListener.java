@@ -27,6 +27,8 @@ public class PlotPurgeListener implements Listener {
         this.scheduledPlots = scheduledPlots;
         if (scheduledPlots.isEmpty()) {
             inPluginInitializeState = false;
+        } else {
+            scheduledPlots.iterator().next().purge(plugin.getServer().getConsoleSender(), true);
         }
     }
 

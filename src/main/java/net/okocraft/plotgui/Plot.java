@@ -276,11 +276,11 @@ public class Plot {
             long cur = System.currentTimeMillis();
             int noLoginTerm = (int) ((cur - lastPlayed) / (1000 * 60 * 60 * 24));
             if (noLoginTerm < threshold) {
-                return true;
+                return false;
             }
         }
 
-        return false;
+        return true;
     }
 
     public boolean purge(CommandSender executor, boolean ignoreCooldown) throws IllegalStateException {
@@ -364,7 +364,7 @@ public class Plot {
         }
 
         Plot plot = load(plugin, region);
-        plot.setKeepTerm(System.currentTimeMillis());
+        plot.setKeepTerm(System.currentTimeMillis() + plugin.config.getPlotPurgeDays() * 24 * 60 * 60 * 1000);
         plot.setRegenHeight(getAverageHeight(5, plot.getWorld(), region));
         return plot;
     }
