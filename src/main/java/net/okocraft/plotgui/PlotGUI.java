@@ -57,8 +57,6 @@ public class PlotGUI extends JavaPlugin {
             getLogger().info("Purging " + inactivePlots.size() + " inactive plots.");
         }
         pm.registerEvents(new PlotPurgeListener(this, inactivePlots), this);
-
-        migrate();
     }
 
     @Override
@@ -70,30 +68,5 @@ public class PlotGUI extends JavaPlugin {
     public void reloadConfig() {
         config.reload();
         messages.reload();
-    }
-
-    private void migrate() {
-        Plots plots = Plots.getInstance();
-
-        for (String oldSystemPlotName : plots.getPlots()) {
-            ProtectedRegion region = plots.getRegion(oldSystemPlotName);
-            if (region == null) {
-                System.out.println("there is not plot named " + oldSystemPlotName);
-                continue;
-            }
-            int regenHeight = plots.getSignLocation(oldSystemPlotName).getBlockY() - 1;
-            Set<OfflinePlayer> owners = plots.getOwners(oldSystemPlotName);
-            OfflinePlayer mostActive = owners.isEmpty() ? null : owners.stream().max((p1, p2) -> (int) (p1.getLastPlayed() - p2.getLastPlayed())).get();
-            
-            Plot plot = Plot.makePlot(this, region);
-            plot.setRegenHeight(regenHeight);
-            if (mostActive != null) {
-                plot.setPlotOwnerUid(mostActive.getUniqueId());
-                plot.setKeepTerm(mostActive.getLastPlayed() + config.getPlotPurgeDays() * 24 * 60 * 60 * 1000);
-            }
-
-            
-        }
-
     }
 }
