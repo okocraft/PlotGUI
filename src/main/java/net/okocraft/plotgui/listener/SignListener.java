@@ -111,12 +111,14 @@ public class SignListener implements Listener {
                 }
             }
             
-            plotCount = Plot.getPlots(plugin, player.getWorld(), player).size();
             int plotLimitWorld = plugin.config.getWorldPlotLimit(sign.getWorld().getName());
-            if (plotLimitWorld < plotCount) {
-                plugin.messages.sendMessage(player, "other.cannot-claim-anymore");
-                sign.update();
-                return;
+            if (plotLimitWorld >= 0) {
+                plotCount = Plot.getPlots(plugin, player.getWorld(), player).size();
+                if (plotLimitWorld < plotCount) {
+                    plugin.messages.sendMessage(player, "other.cannot-claim-anymore");
+                    sign.update();
+                    return;
+                }
             }
 
             plugin.messages.sendMessage(player, "other.confirm-claim");

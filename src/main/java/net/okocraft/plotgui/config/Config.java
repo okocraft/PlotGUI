@@ -54,7 +54,7 @@ public final class Config extends CustomConfig {
     }
 
     public int getWorldPlotLimit(String worldName) {
-        return get().getInt("world-plot-limit." + worldName, 1);
+        return get().getInt("world-plot-limit." + worldName, getDefaultPlotLimit());
     }
 
     public int getRegenCooldown() {
