@@ -13,6 +13,7 @@ command:
       not-enough-arguments: "&c引数が足りません。"
       invalid-number: "&c%number% は不正な数字です。"
       no-player-found: "&c%player% というプレイヤーが見つかりませんでした。"
+      cannot-remove-or-redefine-plot: "&c区画は削除または形を変更することはできません。"
 
 gui:
   playerlist-title: "プレイヤー選択"

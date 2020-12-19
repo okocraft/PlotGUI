@@ -14,12 +14,14 @@ import org.bukkit.plugin.java.JavaPlugin;
 import net.okocraft.plotgui.config.Config;
 import net.okocraft.plotgui.config.Messages;
 import net.okocraft.plotgui.config.Plots;
-import net.okocraft.plotgui.event.ProtectionWatchTask;
 import net.okocraft.plotgui.listener.GUIListener;
 import net.okocraft.plotgui.listener.PlotPurgeListener;
-import net.okocraft.plotgui.listener.ProtectionListener;
+import net.okocraft.plotgui.listener.ProtectionChangeListener;
 import net.okocraft.plotgui.listener.SignListener;
 
+/**
+ * TODO: メッセージ送信メソッドを各メッセージに定義する。現状はパスをべた書きしている。
+ */
 public class PlotGUI extends JavaPlugin {
 
     public final Config config;
@@ -39,11 +41,9 @@ public class PlotGUI extends JavaPlugin {
     public void onEnable() {
         reloadConfig();
 
-        new ProtectionWatchTask().runTaskTimerAsynchronously(this, 0L, 20L);
-
         PluginManager pm = getServer().getPluginManager();
         pm.registerEvents(new GUIListener(this), this);
-        pm.registerEvents(new ProtectionListener(this), this);
+        pm.registerEvents(new ProtectionChangeListener(this), this);
         pm.registerEvents(new SignListener(this), this);
 
         Set<Plot> inactivePlots = new HashSet<>();
@@ -57,6 +57,8 @@ public class PlotGUI extends JavaPlugin {
             getLogger().info("Purging " + inactivePlots.size() + " inactive plots.");
         }
         pm.registerEvents(new PlotPurgeListener(this, inactivePlots), this);
+
+        migrate();
     }
 
     @Override

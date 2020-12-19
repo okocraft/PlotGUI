@@ -45,6 +45,14 @@
             <version>20.1.0</version>
             <scope>provided</scope>
         </dependency>
+
+        <dependency>
+            <groupId>com.mirotcz.wg_gui</groupId>
+            <artifactId>WG_GUI</artifactId>
+            <version>1.5.3</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/libs/WG-GUI_1.13+.jar</systemPath>
+        </dependency>
     </dependencies>
     <build>
         <resources>
