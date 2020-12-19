@@ -3,6 +3,7 @@ package net.okocraft.plotgui.gui;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 import org.bukkit.Bukkit;
+import org.bukkit.block.Sign;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
@@ -19,10 +20,12 @@ public class GUI implements InventoryHolder {
     private final Player owner;
     private final Inventory inventory;
     private final ProtectedRegion region;
+    private final Sign clickedSign;
     
-    public GUI(PlotGUI plugin, Player player, ProtectedRegion region) {
+    public GUI(PlotGUI plugin, Player player, ProtectedRegion region, Sign clickedSign) {
         this.owner = player;
         this.region = region;
+        this.clickedSign = clickedSign;
         this.inventory = Bukkit.createInventory(this, 9, plugin.messages.getMessage("gui.management-title"));
 
 
@@ -49,6 +52,10 @@ public class GUI implements InventoryHolder {
         meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
         meta.addEnchant(Enchantment.LURE, 100, true);
         item.setItemMeta(meta);
+    }
+
+    public Sign getClickedSign() {
+        return clickedSign;
     }
 
     /**

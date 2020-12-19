@@ -10,6 +10,7 @@ import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.block.Sign;
 import org.bukkit.conversations.Conversation;
 import org.bukkit.conversations.ConversationContext;
 import org.bukkit.conversations.ConversationFactory;
@@ -95,13 +96,13 @@ public class GUIListener implements Listener {
             player.closeInventory();
             break;
         case 8:
-            startAbandonConversation(player, region);
+            startAbandonConversation(player, region, gui.getClickedSign());
             player.closeInventory();
             break;
         }
     }
 
-    private void startAbandonConversation(Player player, ProtectedRegion region) {
+    private void startAbandonConversation(Player player, ProtectedRegion region, Sign clickedSign) {
         player.acceptConversationInput("n");
         Conversation conversation = createYesNoConversation("gui.confirm-abandon", player);
         conversation.addConversationAbandonedListener(abandandedEvent -> {
@@ -110,6 +111,9 @@ public class GUIListener implements Listener {
                     Plot plot = Plot.load(plugin, region);
                     if (!plot.purge(player, false)) {
                         plugin.messages.sendMessage(player, "gui.regen-cooldown", Messages.mapOf("%cooldown%", String.valueOf(plot.getCooldown() / 1000)));
+                    } else {
+                        clickedSign.setLine(2, plugin.messages.getMessage("other.click-here-to-claim"));
+                        clickedSign.update();
                     }
                     
                 } else {

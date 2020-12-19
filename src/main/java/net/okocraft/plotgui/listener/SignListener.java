@@ -80,7 +80,7 @@ public class SignListener implements Listener {
             sign.setLine(2, ownerName);
 
             if (player.equals(owner) || player.hasPermission("plotgui.mod")) {
-                player.openInventory(new GUI(plugin, player, region).getInventory());
+                player.openInventory(new GUI(plugin, player, region, sign).getInventory());
             } else {
                 plugin.messages.sendMessage(player, "other.here-is-other-players-region", Messages.mapOf("%owner%", ownerName));
             }
