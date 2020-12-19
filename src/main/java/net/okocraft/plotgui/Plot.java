@@ -58,8 +58,6 @@ public class Plot {
         this.plugin = plugin;
         this.region = region;
 
-        setKeepTerm(System.currentTimeMillis());
-        setRegenHeight(getAverageHeight(5, getWorld(), region));
     }
 
     @SuppressWarnings("unchecked")
@@ -364,7 +362,11 @@ public class Plot {
         if (!isPlot(region)) {
             region.setFlag(PlotFlag.get(), "");
         }
-        return load(plugin, region);
+
+        Plot plot = load(plugin, region);
+        plot.setKeepTerm(System.currentTimeMillis());
+        plot.setRegenHeight(getAverageHeight(5, plot.getWorld(), region));
+        return plot;
     }
 
     public static Plot load(PlotGUI plugin, ProtectedRegion region) throws IllegalStateException {
