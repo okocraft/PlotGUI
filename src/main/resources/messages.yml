@@ -1,5 +1,4 @@
 plugin:
-  version: ${project.version}
   prefix: "&8[&6PlotGUI&8]&r"
 
 command:

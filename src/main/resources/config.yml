@@ -1,3 +1,4 @@
+plot-limit: 1
 plots-per-world: true
 
 gui:
