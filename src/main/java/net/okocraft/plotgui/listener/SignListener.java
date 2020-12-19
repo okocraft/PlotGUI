@@ -85,7 +85,7 @@ public class SignListener implements Listener {
             } else {
                 plugin.messages.sendMessage(player, "other.here-is-other-players-region", Messages.mapOf("%owner%", ownerName));
             }
-
+            sign.update();
         } else {
             sign.setLine(2, plugin.messages.getMessage("other.click-here-to-claim"));
         
