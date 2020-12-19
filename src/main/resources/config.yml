@@ -1,5 +1,7 @@
-plot-limit: 1
-plots-per-world: true
+global-plot-limit: -1
+default-world-plot-limit: 1
+world-plot-limit:
+  world: 1
 
 gui:
   open-sound: BLOCK_CHEST_OPEN

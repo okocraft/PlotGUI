@@ -45,12 +45,16 @@ public final class Config extends CustomConfig {
         );
     }
 
-    public int getPlotLimit() {
-        return get().getInt("plot-limit", 1);
+    public int getDefaultPlotLimit() {
+        return get().getInt("default-world-plot-limit", 1);
     }
 
-    public boolean isPerWorldPlotLimit() {
-        return get().getBoolean("plots-per-world-limit", true);
+    public int getGlobalPlotLimit() {
+        return get().getInt("global-plot-limit", -1);
+    }
+
+    public int getWorldPlotLimit(String worldName) {
+        return get().getInt("world-plot-limit." + worldName, 1);
     }
 
     public int getRegenCooldown() {

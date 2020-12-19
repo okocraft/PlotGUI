@@ -2,7 +2,6 @@ package net.okocraft.plotgui.listener;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
@@ -101,20 +100,27 @@ public class SignListener implements Listener {
             }
 
             int plotCount;
-            if (plugin.config.isPerWorldPlotLimit()) {
-                plotCount = Plot.getPlots(plugin, player.getWorld(), player).size();
-            } else {
+            int plotLimitServer = plugin.config.getGlobalPlotLimit();
+            if (plotLimitServer >= 0) {
                 plotCount = (int) plugin.getServer().getWorlds().stream()
                         .flatMap(world -> Plot.getPlots(plugin, world, player).stream()).count();
+                if (plotLimitServer < plotCount) {
+                    plugin.messages.sendMessage(player, "other.cannot-claim-anymore");
+                    sign.update();
+                    return;
+                }
             }
-
-            if (plotCount < plugin.config.getPlotLimit()) {
-                plugin.messages.sendMessage(player, "other.confirm-claim");
-                CONFIRM.put(player, region.getId());
-            } else {
+            
+            plotCount = Plot.getPlots(plugin, player.getWorld(), player).size();
+            int plotLimitWorld = plugin.config.getWorldPlotLimit(sign.getWorld().getName());
+            if (plotLimitWorld < plotCount) {
                 plugin.messages.sendMessage(player, "other.cannot-claim-anymore");
+                sign.update();
+                return;
             }
 
+            plugin.messages.sendMessage(player, "other.confirm-claim");
+            CONFIRM.put(player, region.getId());
             sign.update();
         }
     }
@@ -189,7 +195,7 @@ public class SignListener implements Listener {
 
         signLines[1] = region.getId();
         signLines[2] = (owner == null) ? plugin.messages.getMessage("other.click-here-to-claim")
-                : Optional.ofNullable(owner.getName()).orElse("null");
+                : owner.getName() != null ? owner.getName() : "null";
         signLines[3] = "";
         return true;
     }
