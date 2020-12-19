@@ -71,7 +71,7 @@ public class ProtectionChangeListener implements Listener {
         World world;
         String id;
         int worldIndex = command.indexOf("-w") + 1;
-        if (worldIndex != -1) {
+        if (worldIndex != 0) {
             if (args.size() - 1 <= worldIndex + 1) {
                 // 保護名がコマンドに含まれていない。
                 return;
