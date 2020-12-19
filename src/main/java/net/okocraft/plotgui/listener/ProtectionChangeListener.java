@@ -1,5 +1,6 @@
 package net.okocraft.plotgui.listener;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -60,7 +61,7 @@ public class ProtectionChangeListener implements Listener {
 
     @EventHandler
     public void onWorldGuardCommand(PlayerCommandPreprocessEvent event) {
-        List<String> args = Arrays.asList(event.getMessage().split(" ", -1));
+        List<String> args = new ArrayList<>(Arrays.asList(event.getMessage().split(" ", -1)));
         String command = args.get(0).toLowerCase(Locale.ROOT);
         String subCommand = args.get(1).toLowerCase(Locale.ROOT);
         if (command.isEmpty() || !REGION_COMMANDS.contains(command)
@@ -72,7 +73,7 @@ public class ProtectionChangeListener implements Listener {
         String id;
         int worldIndex = command.indexOf("-w") + 1;
         if (worldIndex != 0) {
-            if (args.size() - 1 <= worldIndex + 1) {
+            if (args.size() - 1 < worldIndex) {
                 // 保護名がコマンドに含まれていない。
                 return;
             }
@@ -139,7 +140,11 @@ public class ProtectionChangeListener implements Listener {
         if (player == null) {
             return null;
         }
-        World world = Bukkit.getWorld(RegionEditing.getWorld(player));
+        String worldName = RegionEditing.getWorld(player);
+        if (worldName == null) {
+            return null;
+        }
+        World world = Bukkit.getWorld(worldName);
         if (world == null) {
             return null;
         }
