@@ -107,6 +107,7 @@ public class ProtectionChangeListener implements Listener {
                 || PlayerStates.getState(player) == PlayerStates.State.WAITING_REGION_BOUNDARIES_EDIT) {
             event.setCancelled(true);
             event.setMessage("");
+            plugin.messages.sendMessage(player, "command.general.error.cannot-remove-or-redefine-plot");
             return;
         }
     }
@@ -123,6 +124,7 @@ public class ProtectionChangeListener implements Listener {
         if (WG_GUI.getPermsManager().get().checkPermission(player, "wggui.user.remove")) {
             pa = player.addAttachment(plugin);
             pa.setPermission("wggui.user.remove", false);
+            plugin.messages.sendMessage(player, "command.general.error.cannot-remove-or-redefine-plot");
         }
     }
 
