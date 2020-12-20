@@ -3,9 +3,6 @@ package net.okocraft.plotgui;
 import java.util.HashSet;
 import java.util.Set;
 
-import com.sk89q.worldguard.protection.regions.ProtectedRegion;
-
-import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.plugin.PluginManager;
@@ -13,7 +10,6 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import net.okocraft.plotgui.config.Config;
 import net.okocraft.plotgui.config.Messages;
-import net.okocraft.plotgui.config.Plots;
 import net.okocraft.plotgui.listener.GUIListener;
 import net.okocraft.plotgui.listener.PlotPurgeListener;
 import net.okocraft.plotgui.listener.ProtectionChangeListener;
