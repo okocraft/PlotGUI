@@ -188,9 +188,11 @@ public class ProtectionChangeListener implements Listener {
         }
 
         if (PlayerStates.getState(player) == PlayerStates.State.WAITING_INPUT_REGION_RENAME
-                || PlayerStates.getState(player) == PlayerStates.State.WAITING_REGION_BOUNDARIES_EDIT) {
+                || PlayerStates.getState(player) == PlayerStates.State.WAITING_REGION_BOUNDARIES_EDIT
+                || (PlayerStates.getState(player) == PlayerStates.State.WAITING_INPUT_FLAG_STRING_VALUE
+                        && RegionEditing.getFlag(player).getName().equals("plotdata"))) {
             event.setCancelled(true);
-            event.setMessage("");
+            event.setMessage("q");
             plugin.messages.sendMessage(player, "command.general.error.cannot-remove-or-redefine-plot");
             return;
         }
