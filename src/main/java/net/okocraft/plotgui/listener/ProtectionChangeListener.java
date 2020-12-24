@@ -211,6 +211,7 @@ public class ProtectionChangeListener implements Listener {
             pa = player.addAttachment(plugin);
             pa.setPermission("wggui.user.remove", false);
             plugin.messages.sendMessage(player, "command.general.error.cannot-remove-or-redefine-plot");
+            RegionEditing.deleteRegion(player);
         }
     }
 
