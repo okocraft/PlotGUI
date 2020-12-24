@@ -10,12 +10,14 @@ import java.util.Set;
 import com.mirotcz.wg_gui.PlayerStates;
 import com.mirotcz.wg_gui.RegionEditing;
 import com.mirotcz.wg_gui.WG_GUI;
+import com.mirotcz.wg_gui.utils.Messenger;
 import com.sk89q.worldedit.bukkit.BukkitAdapter;
 import com.sk89q.worldguard.WorldGuard;
 import com.sk89q.worldguard.protection.managers.RegionManager;
 import com.sk89q.worldguard.protection.regions.ProtectedRegion;
 
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -24,6 +26,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.AsyncPlayerChatEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.permissions.PermissionAttachment;
 
 import lombok.EqualsAndHashCode;
@@ -207,11 +210,22 @@ public class ProtectionChangeListener implements Listener {
         if (region == null || !Plot.isPlot(region)) {
             return;
         }
+        if (!event.getView().getTitle().equals(ChatColor.translateAlternateColorCodes('&', Messenger.getText("GUI.RegionOptions")))) {
+            return;
+        }
+        ItemStack item = event.getCurrentItem();
+        if (item == null || item.getItemMeta() == null) {
+            return;
+        }
+        String displayName = item.getItemMeta().getDisplayName();
+        if (displayName == null || !displayName
+                .equals(ChatColor.translateAlternateColorCodes('&', Messenger.getText("GUI.RemoveRegionOption")))) {
+            return;
+        }
         if (WG_GUI.getPermsManager().get().checkPermission(player, "wggui.user.remove")) {
             pa = player.addAttachment(plugin);
             pa.setPermission("wggui.user.remove", false);
             plugin.messages.sendMessage(player, "command.general.error.cannot-remove-or-redefine-plot");
-            RegionEditing.deleteRegion(player);
         }
     }
 
