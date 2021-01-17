@@ -104,7 +104,7 @@ public class SignListener implements Listener {
             if (plotLimitServer >= 0) {
                 plotCount = (int) plugin.getServer().getWorlds().stream()
                         .flatMap(world -> Plot.getPlots(plugin, world, player).stream()).count();
-                if (plotLimitServer < plotCount) {
+                if (plotLimitServer <= plotCount) {
                     plugin.messages.sendMessage(player, "other.cannot-claim-anymore");
                     sign.update();
                     return;
@@ -114,7 +114,7 @@ public class SignListener implements Listener {
             int plotLimitWorld = plugin.config.getWorldPlotLimit(sign.getWorld().getName());
             if (plotLimitWorld >= 0) {
                 plotCount = Plot.getPlots(plugin, player.getWorld(), player).size();
-                if (plotLimitWorld < plotCount) {
+                if (plotLimitWorld <= plotCount) {
                     plugin.messages.sendMessage(player, "other.cannot-claim-anymore");
                     sign.update();
                     return;
