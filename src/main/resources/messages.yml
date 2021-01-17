@@ -16,7 +16,7 @@ command:
       cannot-remove-or-redefine-plot: "&c区画は削除または形を変更することはできません。"
 
 gui:
-  playerlist-title: "プレイヤー選択"
+  playerlist-title: "プレイヤーを選んでください。"
   management-title: "保護管理GUI"
   confirm-abandon: "&c区画を放棄すると、建築物が削除されます！ 本当に放棄してもいいですか？ 放棄する場合は &by &c、キャンセルする場合は &bn &cと発言してください。"
   regen-cooldown: "&cクールダウン中です。あと &b%cooldown% &c秒待ってください。"
