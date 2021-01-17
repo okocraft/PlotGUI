@@ -182,7 +182,7 @@ public class ProtectionChangeListener implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler(priority = EventPriority.LOWEST)
     public void onWGGUIRegionModified(AsyncPlayerChatEvent event) {
         Player player = event.getPlayer();
         ProtectedRegion region = getEditingRegion(player);
