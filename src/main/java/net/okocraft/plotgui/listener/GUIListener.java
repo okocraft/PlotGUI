@@ -59,10 +59,11 @@ public class GUIListener implements Listener {
 
         // slot: action
         // 0: add-member
-        // 2: remove-member
-        // 4: add-owner
-        // 6: remove-owner
-        // 8: abandon-and-regen
+        // 1: remove-member
+        // 3: add-owner
+        // 4: remove-owner
+        // 6: preserve
+        // 8: abandon
         ProtectedRegion region = gui.getRegion();
         switch (event.getSlot()) {
         case 0:
@@ -76,20 +77,20 @@ public class GUIListener implements Listener {
         case 1:
             player.closeInventory();
             List<OfflinePlayer> members = region.getOwners().getUniqueIds().stream().map(plugin.getServer()::getOfflinePlayer).collect(Collectors.toList());
-            player.openInventory(new PlayersGUI(plugin, player, members, gui, 2).getInventory());
+            player.openInventory(new PlayersGUI(plugin, player, members, gui, 1).getInventory());
             break;
         case 3:
             player.closeInventory();
             List<OfflinePlayer> ownerCanditates = plugin.getServer().getOnlinePlayers().stream().map(p -> (OfflinePlayer) p)
                     .filter(canditates -> !region.getOwners().contains(canditates.getUniqueId()))
                     .collect(Collectors.toList());
-            player.openInventory(new PlayersGUI(plugin, player, ownerCanditates, gui, 4).getInventory());
+            player.openInventory(new PlayersGUI(plugin, player, ownerCanditates, gui, 3).getInventory());
             break;
         case 4:
             player.closeInventory();
             List<OfflinePlayer> owners = region.getOwners().getUniqueIds().stream().map(plugin.getServer()::getOfflinePlayer).collect(Collectors.toList());
             owners.removeIf(p -> p.getUniqueId().equals(player.getUniqueId()));
-            player.openInventory(new PlayersGUI(plugin, player, owners, gui, 6).getInventory());
+            player.openInventory(new PlayersGUI(plugin, player, owners, gui, 4).getInventory());
             break;
         case 6:
             PlayerListener.putApplication(player);
@@ -205,23 +206,25 @@ public class GUIListener implements Listener {
 
         // slot: action
         // 0: add-member
-        // 2: remove-member
-        // 4: add-owner
-        // 6: remove-owner
+        // 1: remove-member
+        // 3: add-owner
+        // 4: remove-owner
+        // 6: preserve
+        // 8: abandon
         switch (gui.getPreviousGUIClickedSlot()) {
         case 0:
             region.getMembers().addPlayer(selectedPlayer.getUniqueId());
             gui.getInventory().setItem(event.getSlot(), new ItemStack(Material.AIR));
             break;
-        case 2:
+        case 1:
             region.getMembers().removePlayer(selectedPlayer.getUniqueId());
             gui.getInventory().setItem(event.getSlot(), new ItemStack(Material.AIR));
             break;
-        case 4:
+        case 3:
             region.getOwners().addPlayer(selectedPlayer.getUniqueId());
             player.closeInventory();
             break;
-        case 6:
+        case 4:
             region.getOwners().removePlayer(selectedPlayer.getUniqueId());
             player.closeInventory();
             break;
